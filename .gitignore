@@ -1,0 +1,12 @@
+*/target/
+*/build/
+
+.settings/
+.project
+.classpath
+.gradle/
+.launch/
+rebel.xml
+*/test-output/
+
+/target/
