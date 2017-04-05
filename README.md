@@ -1,8 +1,8 @@
 Purpose
 =======
 
-This library is a simple collection of useful utility functions that grew over the past. It doesn't serve a specific 
-purpose other than providing some handy functionalities.
+This library provides an extension to [Freemarker](http://freemarker.org) which allows to use an XML based format for
+the templating.
 
 
 Contact
