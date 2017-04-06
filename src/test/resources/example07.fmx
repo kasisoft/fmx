@@ -1,0 +1,4 @@
+<fmx:cms-component content="component" xmlns:fmx="https://kasisoft.com/namespaces/fmx/0.1" fmx:list="components" fmx:it="component" fmx:depends="wobble" fmx:disable-depends="wumpi">
+  <p>${wobble}</p>
+</fmx:cms-component>
+

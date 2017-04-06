@@ -1,0 +1,4 @@
+<fmx:cms-component content="component" fmx:list="components" fmx:it="component" fmx:depends="wobble" fmx:disable-depends="wumpi">
+  <p>${wobble}</p>
+</fmx:cms-component>
+

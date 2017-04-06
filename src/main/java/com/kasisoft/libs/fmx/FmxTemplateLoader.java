@@ -1,0 +1,118 @@
+package com.kasisoft.libs.fmx;
+
+import com.kasisoft.libs.common.io.*;
+
+import javax.annotation.*;
+
+import java.util.function.*;
+
+import java.io.*;
+
+import lombok.extern.slf4j.*;
+
+import lombok.experimental.*;
+
+import lombok.*;
+
+import freemarker.cache.*;
+
+/**
+ * This loader uses another {@link TemplateLoader} instance to load <code>.fmx</code> templates. It  
+ * <b>WON'T</b> load normal <code>.ftl</code> templates.  
+ * 
+ * @author daniel.kasmeroglu@kasisoft.net
+ */
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
+public class FmxTemplateLoader implements TemplateLoader {
+
+  private static final String            SUFFIX = ".fmx";
+  private static final Predicate<String> IS_FMX = $ -> $.endsWith( SUFFIX ); 
+  
+  TemplateLoader            delegate;
+  FmxTranslator   translator;
+  Predicate<String>         isFmx;
+  
+  public FmxTemplateLoader( @Nonnull TemplateLoader loader ) {
+    this( loader, null );
+  }
+  
+  public FmxTemplateLoader( @Nonnull TemplateLoader loader, Predicate<String> test ) {
+    delegate    = loader;
+    translator  = new FmxTranslator();
+    isFmx       = test != null ? test : IS_FMX;
+  }
+  
+  @Override
+  public Object findTemplateSource( @Nonnull String name ) throws IOException {
+    FmxRecord result = null;
+    if( isFmx.test( name ) ) {
+      Object resource = delegate.findTemplateSource( name );
+      if( resource != null ) {
+        result = new FmxRecord( resource, null );
+      }
+    }
+    return result;
+  }
+
+  @Override
+  public long getLastModified( Object templateSource ) {
+    long result = 0L;
+    if( templateSource instanceof FmxRecord ) {
+      result = delegate.getLastModified( ((FmxRecord) templateSource).resource );
+    }
+    return result;
+  }
+
+  @Override
+  public Reader getReader( Object templateSource, String encoding ) throws IOException {
+    Reader result = null;
+    if( templateSource instanceof FmxRecord ) {
+      FmxRecord fmxRecord = (FmxRecord) templateSource;
+      if( fmxRecord.getTranslation() == null ) {
+        // first call: translate fmx to ftl
+        fmxRecord.setTranslation( loadTranslation( fmxRecord.getResource(), encoding ) );
+      }
+      result = new StringReader( fmxRecord.translation );
+    }
+    return result;
+  }
+
+  @Override
+  public void closeTemplateSource( Object templateSource ) throws IOException {
+    if( templateSource instanceof FmxRecord ) {
+      FmxRecord fmxRecord = (FmxRecord) templateSource;
+      delegate.closeTemplateSource( fmxRecord.resource );
+      fmxRecord.setTranslation( null );
+    }
+  }
+  
+  private String loadTranslation( Object resource, String encoding ) throws IOException {
+    try( Reader reader = delegate.getReader( resource, encoding ) ) {
+      return loadTranslation( reader );
+    }
+  }
+
+  private String loadTranslation( Reader reader ) {
+    String fullInput = IoFunctions.readTextFully( reader );
+    String result    = translator.convert( fullInput );
+    if( log.isTraceEnabled() ) {
+      log.trace( "---- before ----" );
+      log.trace( fullInput );
+      log.trace( "---- after ----" );
+      log.trace( result );
+      log.trace( "---- done ----" );
+    }
+    return result;
+  }
+
+  @AllArgsConstructor
+  @Data
+  private static final class FmxRecord {
+    
+    Object  resource;
+    String  translation;
+    
+  } /* ENDCLASS */
+  
+} /* ENDCLASS */
