@@ -1,5 +1,7 @@
 package com.kasisoft.libs.fmx;
 
+import static com.kasisoft.libs.fmx.FmxConstants.*;
+
 import com.kasisoft.libs.common.io.*;
 
 import javax.annotation.*;
@@ -26,12 +28,9 @@ import freemarker.cache.*;
 @Slf4j
 public class FmxTemplateLoader implements TemplateLoader {
 
-  private static final String            SUFFIX = ".fmx";
-  private static final Predicate<String> IS_FMX = $ -> $.endsWith( SUFFIX ); 
-  
-  TemplateLoader            delegate;
-  FmxTranslator2            translator;
-  Predicate<String>         isFmx;
+  TemplateLoader      delegate;
+  FmxTranslator       translator;
+  Predicate<String>   isFmx;
   
   public FmxTemplateLoader( @Nonnull TemplateLoader loader ) {
     this( loader, null );
@@ -39,7 +38,7 @@ public class FmxTemplateLoader implements TemplateLoader {
   
   public FmxTemplateLoader( @Nonnull TemplateLoader loader, Predicate<String> test ) {
     delegate    = loader;
-    translator  = new FmxTranslator2();
+    translator  = new FmxTranslator();
     isFmx       = test != null ? test : IS_FMX;
   }
   
@@ -93,17 +92,21 @@ public class FmxTemplateLoader implements TemplateLoader {
     }
   }
 
-  private String loadTranslation( Reader reader ) {
-    String fullInput = IoFunctions.readTextFully( reader );
-    String result    = translator.convert( fullInput );
-    if( log.isTraceEnabled() ) {
-      log.trace( "---- before ----" );
-      log.trace( fullInput );
-      log.trace( "---- after ----" );
-      log.trace( result );
-      log.trace( "---- done ----" );
+  private String loadTranslation( Reader reader ) throws IOException {
+    try {
+      String fullInput = IoFunctions.readTextFully( reader );
+      String result    = translator.convert( fullInput );
+      if( log.isTraceEnabled() ) {
+        log.trace( "<<---- before ---->>" );
+        log.trace( fullInput );
+        log.trace( "<<---- after ----->>" );
+        log.trace( result );
+        log.trace( "<<---- done ------>>" );
+      }
+      return result;
+    } catch( RuntimeException ex ) {
+      throw new IOException( ex );
     }
-    return result;
   }
 
   @AllArgsConstructor

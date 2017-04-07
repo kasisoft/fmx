@@ -1,8 +1,5 @@
 package com.kasisoft.libs.fmx.internal;
 
-import com.kasisoft.libs.common.text.*;
-import com.kasisoft.libs.fmx.*;
-
 import org.w3c.dom.*;
 
 import javax.annotation.*;
@@ -14,49 +11,41 @@ import lombok.experimental.*;
 import lombok.*;
 
 /**
+ * This wrapper allows to process elements where some of the features are applied as attributes.
+ * 
  * @author daniel.kasmeroglu@kasisoft.net
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @ToString(callSuper = true)
-public class FmxXmlElement extends NodeWrapper<Element> {
+public class FmxXmlElement extends XmlElement {
 
-  List<Attr>    attributes;
-  String        tag;
-  
   public FmxXmlElement( @Nonnull Element xmlElement, @Nonnull List<Attr> xmlAttributes  ) {
-    super( xmlElement );
-    attributes = xmlAttributes;
-    if( xmlElement.getPrefix() != null ) {
-      tag = String.format( "%s:%s", xmlElement.getPrefix(), xmlElement.getLocalName() );
-    } else {
-      tag = xmlElement.getLocalName();
-    }
+    super( xmlElement, xmlAttributes );
   }
 
   @Override
   public void emit( TranslationContext ctx ) {
-    String dependsExpression  = getDependsExpression();
-    String listExpression     = getListExpression();
-    String iteratorName       = getIteratorName();
-    String withExpression     = getWithExpression();
-    String withName           = getName();
-    String wrapExpression     = getWrapExpression();
+    
+    String dependsExpression  = FmxAttr . depends . getValue( getNode() );
+    String listExpression     = FmxAttr . list    . getValue( getNode() );
+    String iteratorName       = FmxAttr . it      . getValue( getNode(), "it" );
+    String withExpression     = FmxAttr . with    . getValue( getNode() );
+    String withName           = FmxAttr . name    . getValue( getNode(), "model" );
+    String wrapExpression     = FmxAttr . wrap    . getValue( getNode() );
+    
     openDepends( ctx, dependsExpression );
     String varname = openWith( ctx, withExpression, withName );
     openList( ctx, listExpression, iteratorName );
     openWrap( ctx, wrapExpression );
-    if( getChildren().isEmpty() ) {
-      ctx.writeXmlTag( tag, attributes );
-    } else {
-      ctx.openXmlTag( tag, attributes );
-      emitChildren( ctx );
-      ctx.closeXmlTag( tag );
-    }
+    
+    super.emit( ctx );
+    
     closeWrap( ctx, wrapExpression );
     closeList( ctx, listExpression );
     closeWith( ctx, withExpression, withName, varname );
     closeDepends( ctx, dependsExpression );
+    
   }
   
   private void openWrap( TranslationContext ctx, String wrapExpression ) {
@@ -111,66 +100,6 @@ public class FmxXmlElement extends NodeWrapper<Element> {
     if( dependsExpression != null ) {
       ctx.append( "[/#if]\n" );
     }
-  }
-  
-  private String getName() {
-    String result   = null;
-    Attr   nameNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.name.name() );
-    if( nameNode != null ) {
-      result = StringFunctions.cleanup( nameNode.getNodeValue() );
-    }
-    if( result == null ) {
-      result = "model";
-    }
-    return result;
-  }
-  
-  private String getWithExpression() {
-    String result   = null;
-    Attr   withNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.with.name() );
-    if( withNode != null ) {
-      result = StringFunctions.cleanup( withNode.getNodeValue() );
-    }
-    return result;
-  }
-  
-  private String getListExpression() {
-    String result   = null;
-    Attr   listNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.list.name() );
-    if( listNode != null ) {
-      result = StringFunctions.cleanup( listNode.getNodeValue() );
-    }
-    return result;
-  }
-
-  private String getWrapExpression() {
-    String result      = null;
-    Attr   dependsNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.wrap.name() );
-    if( dependsNode != null ) {
-      result = StringFunctions.cleanup( dependsNode.getNodeValue() );
-    }
-    return result;
-  }
-
-  private String getDependsExpression() {
-    String result      = null;
-    Attr   dependsNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.depends.name() );
-    if( dependsNode != null ) {
-      result = StringFunctions.cleanup( dependsNode.getNodeValue() );
-    }
-    return result;
-  }
-
-  private String getIteratorName() {
-    String result = "it";
-    Attr   itNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.it.name() );
-    if( itNode != null ) {
-      String val = StringFunctions.cleanup( itNode.getNodeValue() );
-      if( val != null ) {
-        result = val;
-      }
-    }
-    return result;
   }
 
 } /* ENDCLASS */

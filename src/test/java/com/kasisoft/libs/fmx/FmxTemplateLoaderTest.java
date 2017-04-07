@@ -37,10 +37,10 @@ public class FmxTemplateLoaderTest {
     Object template1 = fmxTemplateLoader.findTemplateSource( "bibo.fmx" );
     assertNull( template1 );
 
-    Object template2 = fmxTemplateLoader.findTemplateSource( "example01.ftl" );
+    Object template2 = fmxTemplateLoader.findTemplateSource( "01_unchanged.ftl" );
     assertNull( template2 );
 
-    Object template3 = fmxTemplateLoader.findTemplateSource( "example01.fmx" );
+    Object template3 = fmxTemplateLoader.findTemplateSource( "01_unchanged.fmx" );
     assertNotNull( template3 );
 
   }
@@ -48,7 +48,7 @@ public class FmxTemplateLoaderTest {
   @Test
   public void getLastModified() throws Exception {
 
-    Object template1 = fmxTemplateLoader.findTemplateSource( "example01.fmx" );
+    Object template1 = fmxTemplateLoader.findTemplateSource( "01_unchanged.fmx" );
     assertNotNull( template1 );
 
     long lm1 = fmxTemplateLoader.getLastModified( template1 );
@@ -59,14 +59,14 @@ public class FmxTemplateLoaderTest {
   @Test
   public void getReader() throws Exception {
 
-    Object template1 = fmxTemplateLoader.findTemplateSource( "example02.fmx" );
+    Object template1 = fmxTemplateLoader.findTemplateSource( "22_import.fmx" );
     assertNotNull( template1 );
 
     String text = null;
     try( Reader reader = fmxTemplateLoader.getReader( template1, "UTF-8" ) ) {
       text = IoFunctions.readTextFully( reader );
     }
-    assertThat( text, is( "[@main /]\n" ) );
+    assertThat( text, is( "[#import '/bibo/sample.ftl' as dodo /]\n" ) );
 
   }
 

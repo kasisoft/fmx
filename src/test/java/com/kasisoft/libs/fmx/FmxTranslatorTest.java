@@ -19,7 +19,7 @@ import lombok.*;
  * @author daniel.kasmeroglu@kasisoft.net
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FmxTranslatorTest2 {
+public class FmxTranslatorTest {
 
   private static List<String> TESTCASES = Arrays.asList( new String[] {
       
@@ -92,13 +92,16 @@ public class FmxTranslatorTest2 {
     // only emit attributes if there non-empty
     "23_empty-attributes", 
 
+    // embedded ftl
+    "24_embedded-ftl", 
+
   } );
   
-  FmxTranslator2    translator;
+  FmxTranslator    translator;
   
   @BeforeClass
   public void setup() {
-    translator = new FmxTranslator2( null, null, $ -> "axolotl." + $ );
+    translator = new FmxTranslator( null, null, $ -> "axolotl." + $ );
   }
   
   @DataProvider(name = "convertData")

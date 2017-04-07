@@ -27,7 +27,10 @@ public class Messages {
   
   @I18N("Missing 'fmx:model' attribute for 'fmx:with' element !")
   public static String    missing_fmx_model;
-  
+
+  @I18N("Missing root element.")
+  public static String    error_no_root_element;
+
   static {
     I18NSupport.initialize( Messages.class );
   }

@@ -1,6 +1,6 @@
 package com.kasisoft.libs.fmx.internal;
 
-import com.kasisoft.libs.fmx.*;
+import static com.kasisoft.libs.fmx.FmxConstants.*;
 
 import org.w3c.dom.*;
 
@@ -52,7 +52,7 @@ public enum FmxElementType {
   
   public static FmxElementType valueByNode( @Nonnull Node node ) {
     FmxElementType result = null;
-    if( FmxTranslator2.FMX_NAMESPACE.equals( node.getNamespaceURI() ) ) {
+    if( FMX_NAMESPACE.equals( node.getNamespaceURI() ) ) {
       result = LocalData.map.get( node.getLocalName() );
     }
     return result;

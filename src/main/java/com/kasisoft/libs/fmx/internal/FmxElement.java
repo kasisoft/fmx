@@ -2,9 +2,6 @@ package com.kasisoft.libs.fmx.internal;
 
 import static com.kasisoft.libs.fmx.internal.Messages.*;
 
-import com.kasisoft.libs.common.text.*;
-import com.kasisoft.libs.fmx.*;
-
 import org.w3c.dom.*;
 
 import javax.annotation.*;
@@ -16,6 +13,9 @@ import lombok.experimental.*;
 import lombok.*;
 
 /**
+ * This wrapper is used for dedicated generation elements. The <code>root</code> type is artificial whereas
+ * all unsupported types will be mapped to corresponding directives.
+ * 
  * @author daniel.kasmeroglu@kasisoft.net
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -55,162 +55,82 @@ public class FmxElement extends NodeWrapper<Element> {
     emitChildren( ctx );
   }
   
+  /**
+   * Causes the inner content to be rendered after a model attribute will be set to simplify the usage.
+   *  
+   * @param ctx   Receiver for the emitted code.
+   */
   private void emitWith( TranslationContext ctx ) {
-    String name            = getName();
-    String modelExpression = getModelExpression();
-    String var             = ctx.newVar();
-    ctx.appendF( "[#assign %s=%s! /]\n", var, name );
-    ctx.appendF( "[#assign %s=%s /]\n", name, modelExpression );
+    String modelName  = FmxAttr.name.getValue( getNode(), "model" );
+    String modelExpr  = FmxAttr.value.getRequiredValue( getNode(), error_with_values );
+    // this variable name is used in case it already exists within the model, so we're backing it up before
+    String var        = ctx.newVar();
+    ctx.appendF( "[#assign %s=%s! /]\n", var, modelName );
+    ctx.appendF( "[#assign %s=%s /]\n", modelName, modelExpr );
     emitChildren( ctx );
-    ctx.appendF( "[#assign %s=%s /]\n", name, var );
+    ctx.appendF( "[#assign %s=%s /]\n", modelName, var );
   }
 
-  private String getName() {
-    String result   = null;
-    Attr   nameNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.name.name() );
-    if( nameNode != null ) {
-      result = StringFunctions.cleanup( nameNode.getNodeValue() );
-    }
-    if( result == null ) {
-      result = "model";
-    }
-    return result;
-  }
-  
-  private String getModelExpression() {
-    Attr modelNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.model.name() );
-    if( modelNode == null ) {
-      throw new FmxException( error_with_values );
-    }
-    String result = StringFunctions.cleanup( modelNode.getNodeValue() );
-    if( result == null ) {
-      throw new FmxException( error_with_values );
-    }
-    return result;
-  }
-  
+  /**
+   * Only render the content if a certain condition is valid.
+   *  
+   * @param ctx   Receiver for the emitted code.
+   */
   private void emitDepends( TranslationContext ctx ) {
-    String dependsExpression = getDependsExpression();
-    ctx.appendF( "[#if %s]\n", dependsExpression );
+    String dependsExpr = FmxAttr.value.getRequiredValue( getNode(), error_depends_values );
+    ctx.appendF( "[#if %s]\n", dependsExpr );
     emitChildren( ctx );
     ctx.appendF( "[/#if]\n" );
   }
   
-  private String getDependsExpression() {
-    Attr valueNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.value.name() );
-    if( valueNode == null ) {
-      throw new FmxException( error_depends_values );
-    }
-    String result = StringFunctions.cleanup( valueNode.getNodeValue() );
-    if( result == null ) {
-      throw new FmxException( error_depends_values );
-    }
-    return result;
-  }
-  
+  /**
+   * Iterates through a list.
+   *  
+   * @param ctx   Receiver for the emitted code.
+   */
   private void emitList( TranslationContext ctx ) {
-    String listExpression = getListExpression();
-    String iteratorName   = getIteratorName();
+    String listExpression = FmxAttr.value.getRequiredValue( getNode(), error_list_values );
+    String iteratorName   = FmxAttr.it.getValue( getNode(), "it" );
     ctx.appendF( "[#list %s as %s]\n", listExpression, iteratorName );
     emitChildren( ctx );
     ctx.appendF( "[/#list]\n" );
   }
   
-  private String getListExpression() {
-    Attr   valueNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.value.name() );
-    if( valueNode == null ) {
-      throw new FmxException( error_list_values );
-    }
-    String result = StringFunctions.cleanup( valueNode.getNodeValue() );
-    if( result == null ) {
-      throw new FmxException( error_list_values );
-    }
-    return result;
-  }
-
-  private String getIteratorName() {
-    String result = "it";
-    Attr   itNode = getNode().getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, FmxAttr.it.name() );
-    if( itNode != null ) {
-      String val = StringFunctions.cleanup( itNode.getNodeValue() );
-      if( val != null ) {
-        result = val;
-      }
-    }
-    return result;
-  }
-
+  /**
+   * Generates an include statement.
+   *  
+   * @param ctx   Receiver for the emitted code.
+   */
   private void emitInclude( TranslationContext ctx ) {
-    String path = getIncludePath();
+    String path = FmxAttr.path.getRequiredValue( getNode(), error_include_values );
     ctx.appendF( "[#include '%s' /]\n", path );
   }
 
+  /**
+   * Generates an import statement.
+   *  
+   * @param ctx   Receiver for the emitted code.
+   */
   private void emitImport( TranslationContext ctx ) {
-    String path = getImportPath();
-    String name = getImportName();
+    String path = FmxAttr.path.getRequiredValue( getNode(), error_import_values );
+    String name = FmxAttr.name.getRequiredValue( getNode(), error_import_values );
     ctx.appendF( "[#import '%s' as %s /]\n", path, name );
   }
 
-  private String getImportName() {
-    Attr attr = FmxAttr.name.getAttr( getNode() );
-    if( attr == null ) {
-      throw new FmxException( error_import_values );
-    }
-    String result = StringFunctions.cleanup( attr.getNodeValue() ); 
-    if( result == null ) {
-      throw new FmxException( error_import_values );
-    }
-    return result;
-  }
-  
-  private String getImportPath() {
-    Attr attr = FmxAttr.path.getAttr( getNode() );
-    if( attr == null ) {
-      throw new FmxException( error_import_values );
-    }
-    String result = StringFunctions.cleanup( attr.getNodeValue() ); 
-    if( result == null ) {
-      throw new FmxException( error_import_values );
-    }
-    return result;
-  }
-
-  private String getIncludePath() {
-    if( attributes.size() != 1 ) {
-      throw new FmxException( error_include_values );
-    }
-    FmxAttr attr = FmxAttr.valueByAttr( attributes.get(0) );
-    if( attr != FmxAttr.path ) {
-      throw new FmxException( error_include_values );
-    }
-    String result = StringFunctions.cleanup( attributes.get(0).getNodeValue() ); 
-    if( result == null ) {
-      throw new FmxException( error_include_values );
-    }
-    return result;
-  }
-  
+  /**
+   * Generates a doctype declaration.
+   *  
+   * @param ctx   Receiver for the emitted code.
+   */
   private void emitDoctype( TranslationContext ctx ) {
-    ctx.appendF( "<!doctype %s>\n", getDoctype() );
+    ctx.appendF( "<!doctype %s>\n", FmxAttr.value.getValue( getNode(), "html" ) );
   }
 
-  private String getDoctype() {
-    String result = null;
-    if( attributes.size() > 1 ) {
-      throw new FmxException( error_doctype_values );
-    } else if( attributes.size() == 1 ) {
-      FmxAttr attr = FmxAttr.valueByAttr( attributes.get(0) );
-      if( attr != FmxAttr.value ) {
-        throw new FmxException( error_doctype_values );
-      }
-      result = StringFunctions.cleanup( attributes.get(0).getNodeValue() );
-    }
-    if( result == null ) {
-      result = "html";
-    }
-    return result;
-  }
-  
+  /**
+   * Generates a directive call.
+   *  
+   * @param ctx   Receiver for the emitted code.
+   */
   private void emitDirective( TranslationContext ctx ) {
     String name = ctx.getDirectiveProvider().apply( getNode().getLocalName() );
     ctx.appendF( "[@%s", name );

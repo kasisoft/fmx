@@ -1,4 +1,4 @@
-<fmx:with fmx:model="items" fmx:name="gollum">
+<fmx:with fmx:value="items" fmx:name="gollum">
   <my-element b="second" a="first">
     <inner c="${gollum}"/>
   </my-element>

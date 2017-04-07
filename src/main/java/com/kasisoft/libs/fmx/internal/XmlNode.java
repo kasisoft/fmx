@@ -24,9 +24,11 @@ public class XmlNode extends NodeWrapper<Node> {
   
   @Override
   public void emit( TranslationContext ctx ) {
-    String content = StringFunctions.cleanup( getNode().getNodeValue() );
+    String value   = getNode().getNodeValue();
+    String content = StringFunctions.cleanup( value );
     if( content != null ) {
       ctx.append( content );
+      ctx.append( "\n" );
     }
   }
   

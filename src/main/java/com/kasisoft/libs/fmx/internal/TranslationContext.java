@@ -1,7 +1,9 @@
 package com.kasisoft.libs.fmx.internal;
 
+import static com.kasisoft.libs.fmx.FmxConstants.*;
+
 import com.kasisoft.libs.common.text.*;
-import com.kasisoft.libs.fmx.*;
+import com.kasisoft.libs.common.util.*;
 
 import org.w3c.dom.*;
 
@@ -20,21 +22,23 @@ import lombok.*;
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data @AllArgsConstructor
-public final class TranslationContext {
+public final class TranslationContext implements AutoCloseable {
 
+  private static final Bucket<StringFBuilder> STRINGFBUILDER = BucketFactories.newStringFBuilderBucket();
+  
   private static final String INDENTION = "  ";
   
   StringFBuilder                            builder;
   Function<String, String>                  directiveProvider;
-  StringBuilder                             indent;
-  StringBuilder                             replacer;
+  StringFBuilder                            indent;
+  StringFBuilder                            replacer;
   long                                      counter;
   
-  public TranslationContext( StringFBuilder stringBuilder, Function<String, String> directives ) {
-    builder           = stringBuilder;
+  public TranslationContext( Function<String, String> directives ) {
+    builder           = STRINGFBUILDER.allocate();
+    indent            = STRINGFBUILDER.allocate();
+    replacer          = STRINGFBUILDER.allocate();
     directiveProvider = directives;
-    indent            = new StringBuilder();
-    replacer          = new StringBuilder();
     counter           = 0;
   }
   
@@ -75,10 +79,12 @@ public final class TranslationContext {
   
   public void xmlAttribute( Attr attr ) {
     String nsUri = attr.getNamespaceURI();
-    if( ! FmxTranslator2.FMX_NAMESPACE.equals( nsUri ) ) {
+    // only emit non-fmx attributes
+    if( ! FMX_NAMESPACE.equals( nsUri ) ) {
       String nodeValue = escapeValue( attr );
       if( attr.getPrefix() != null ) {
-        if( FmxTranslator2.FMT_NAMESPACE.equals( nsUri ) ) {
+        // generate a test for the attribute value indicated by the namespace
+        if( FMT_NAMESPACE.equals( nsUri ) ) {
           appendF( "[#if (%s)?has_content] %s=\"${%s}\"[/#if]", nodeValue, attr.getLocalName(), nodeValue );
         } else {
           appendF( " %s:%s=\"%s\"", attr.getPrefix(), attr.getLocalName(), nodeValue );
@@ -90,7 +96,7 @@ public final class TranslationContext {
   }
 
   public void fmAttribute( Attr attr ) {
-    if( ! FmxTranslator2.FMX_NAMESPACE.equals( attr.getNamespaceURI() ) ) {
+    if( ! FMX_NAMESPACE.equals( attr.getNamespaceURI() ) ) {
       String nodeValue = attr.getNodeValue();
       if( attr.getPrefix() != null ) {
         appendF( " %s:%s=\"%s\"", attr.getPrefix(), attr.getLocalName(), nodeValue );
@@ -117,6 +123,23 @@ public final class TranslationContext {
       }
     }
     return replacer.toString();
+  }
+
+  @Override
+  public void close() {
+    if( builder != null ) {
+      STRINGFBUILDER.free( builder  );
+      STRINGFBUILDER.free( indent   );
+      STRINGFBUILDER.free( replacer );
+      builder  = null;
+      indent   = null;
+      replacer = null;
+    }
+  }
+  
+  @Override
+  public String toString() {
+    return builder.toString();
   }
 
 } /* ENDCLASS */

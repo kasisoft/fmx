@@ -1,5 +1,8 @@
 package com.kasisoft.libs.fmx.internal;
 
+import static com.kasisoft.libs.fmx.FmxConstants.*;
+
+import com.kasisoft.libs.common.text.*;
 import com.kasisoft.libs.fmx.*;
 
 import org.w3c.dom.*;
@@ -23,7 +26,6 @@ public enum FmxAttr {
   depends   ( "depends" ),
   list      ( "list"    ),
   name      ( "name"    ),
-  model     ( "model"   ),
   path      ( "path"    ),
   with      ( "with"    ),
   wrap      ( "wrap"    ),
@@ -37,12 +39,37 @@ public enum FmxAttr {
   }
   
   public Attr getAttr( Element element ) {
-    return element.getAttributeNodeNS( FmxTranslator2.FMX_NAMESPACE, literal );
+    return element.getAttributeNodeNS( FMX_NAMESPACE, literal );
+  }
+  
+  public String getValue( Element element ) {
+    String result = null;
+    Attr   attr   = getAttr( element );
+    if( attr != null ) {
+      result = StringFunctions.cleanup( attr.getNodeValue() );
+    }
+    return result;
+  }
+
+  public String getValue( Element element, String defValue ) {
+    String result = getValue( element );
+    if( result == null ) {
+      result = defValue;
+    }
+    return result;
+  }
+
+  public String getRequiredValue( Element element, String errorMessage ) {
+    String result = getValue( element );
+    if( result == null ) {
+      throw new FmxException( errorMessage );
+    }
+    return result;
   }
 
   public static FmxAttr valueByAttr( @Nonnull Attr attr ) {
     FmxAttr result = null;
-    if( FmxTranslator2.FMX_NAMESPACE.equals( attr.getNamespaceURI() ) ) {
+    if( FMX_NAMESPACE.equals( attr.getNamespaceURI() ) ) {
       result = LocalData.map.get( attr.getLocalName() );
     }
     return result;

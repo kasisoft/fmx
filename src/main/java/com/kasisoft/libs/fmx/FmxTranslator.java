@@ -1,7 +1,8 @@
 package com.kasisoft.libs.fmx;
 
-import com.kasisoft.libs.common.text.*;
-import com.kasisoft.libs.common.util.*;
+import static com.kasisoft.libs.fmx.internal.Messages.*;
+import static com.kasisoft.libs.fmx.FmxConstants.*;
+
 import com.kasisoft.libs.fmx.internal.*;
 
 import org.slf4j.*;
@@ -25,30 +26,27 @@ import lombok.*;
  * @author daniel.kasmeroglu@kasisoft.net
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FmxTranslator2 {
+public class FmxTranslator {
   
-  private static final Logger log = LoggerFactory.getLogger( FmxTranslator2.class );
+  private static final Logger log = LoggerFactory.getLogger( FmxTranslator.class );
 
-  public  static final String FMX_NAMESPACE       = "https://kasisoft.com/namespaces/fmx/0.1";
-  public  static final String FMT_NAMESPACE       = "https://kasisoft.com/namespaces/fmt/0.1";
-  
-  private static final String FMT_PREFIX          = "fmt";
-  private static final String FMX_PREFIX          = "fmx";
-  
-  private static final String WRAPPER             = "<%s:root xmlns:%s=\"%s\" xmlns:%s=\"%s\">%%s</%s:root>";
-  
-  private static final Bucket<StringFBuilder> STRINGFBUILDER = BucketFactories.newStringFBuilderBucket();
+  // a root element so it's made sure that multiple xml elements are embedded in a root element
+  private static final String WRAPPER = "<%s:root xmlns:%s=\"%s\" xmlns:%s=\"%s\">%%s</%s:root>";
   
   String                     nsPrefix;
   String                     nsTPrefix;
   String                     wrapper;
   Function<String, String>   directiveProvider;
   
-  public FmxTranslator2() {
+  public FmxTranslator() {
     this( null, null, null );
   }
   
-  public FmxTranslator2( String prefix, String tPrefix, Function<String, String> directives ) {
+  public FmxTranslator( Function<String, String> directives ) {
+    this( null, null, directives );
+  }
+  
+  public FmxTranslator( String prefix, String tPrefix, Function<String, String> directives ) {
     nsPrefix          = prefix  != null ? prefix  : FMX_PREFIX;
     nsTPrefix         = tPrefix != null ? tPrefix : FMT_PREFIX;
     wrapper           = String.format( WRAPPER, nsPrefix, nsPrefix, FMX_NAMESPACE, nsTPrefix, FMT_NAMESPACE, nsPrefix );
@@ -56,35 +54,47 @@ public class FmxTranslator2 {
   }
   
   
+  /**
+   * This main function converts the supplied xml based input into the corresponding fmx ftl code.
+   * 
+   * @param xmlInput   The xml based ftl input.
+   * 
+   * @return   The fmx ftl code.
+   * 
+   * @throws   FmxException
+   */
   public String convert( @Nonnull String xmlInput ) {
-    NodeWrapper rootWrapper = decorate( xmlInput );
-    String      result      = null;
-    if( rootWrapper != null ) {
-      if( log.isTraceEnabled() ) {
-        log.trace( "{}", rootWrapper );
+    try {
+      NodeWrapper rootWrapper = decorate( xmlInput );
+      String      result      = null;
+      logWrapper( rootWrapper );
+      if( rootWrapper != null ) {
+        try( TranslationContext ctx = new TranslationContext( directiveProvider ) ) {
+          rootWrapper.emit( ctx );
+          result = ctx.toString();
+        }
       }
-      result = STRINGFBUILDER.forInstance( this::emit, rootWrapper );
-    } else {
-      if( log.isTraceEnabled() ) {
-        log.trace( "no root element" );
+      return result;
+    } catch( Exception ex ) {
+      throw FmxException.wrap( ex );
+    }
+  }
+  
+  private void logWrapper( NodeWrapper wrapper ) {
+    if( log.isTraceEnabled() ) {
+      if( wrapper != null ) {
+        log.trace( "{}", wrapper );
+      } else {
+        log.trace( error_no_root_element );
       }
     }
-    return result;
   }
   
-  private String emit( StringFBuilder builder, NodeWrapper wrapper ) {
-    TranslationContext context = new TranslationContext( builder, directiveProvider );
-    wrapper.emit( context );
-    return builder.toString();
-  }
-  
-  private NodeWrapper decorate( String xmlInput ) {
+  private NodeWrapper decorate( String xmlInput ) throws IOException {
     String wrapped     = String.format( wrapper, xmlInput );
     Node   rootElement = null;
     try( Reader reader = new StringReader( wrapped ) ) {
       rootElement = (Node) JAXB.unmarshal( reader, Object.class );
-    } catch( Exception ex ) {
-      ex.printStackTrace();
     }
     NodeWrapper result = null;
     if( rootElement != null ) {
@@ -98,14 +108,19 @@ public class FmxTranslator2 {
     if( node.getNodeType() == Node.ELEMENT_NODE ) {
       Element     element    = (Element) node;
       List<Attr>  attributes = getAttributes( element.getAttributes() );
-      if( isFmxRelevant( element ) ) {
+      if( IS_FMX_RELEVANT.test( element ) ) {
+        // a specific fmx element
         result = new FmxElement( element, FmxElementType.valueByNode( element, FmxElementType.directive ), attributes );
-      } else if( hasFmxAttribute( attributes ) ) {
+      } else if( HAS_FMX_ATTRIBUTE.test( attributes ) ) {
+        // some fmx attributes
         result = new FmxXmlElement( element, attributes );
       } else {
+        // simple xml element
         result = new XmlElement( element, attributes );
       }
+      
     } else {
+      // simple node
       result = new XmlNode( node );
     }
     addChildren( result );
@@ -119,12 +134,6 @@ public class FmxTranslator2 {
     }
   }
     
-  private boolean hasFmxAttribute( List<Attr> attributes ) {
-    return attributes.parallelStream()
-      .map( this::isFmxRelevant )
-      .reduce( false, ($1, $2) -> $1 || $2 );
-  }
-
   private List<Attr> getAttributes( NamedNodeMap namedNodeMap ) {
     List<Attr> result = Collections.emptyList();
     if( namedNodeMap != null ) {
@@ -141,14 +150,6 @@ public class FmxTranslator2 {
     String s1 = attr1.getLocalName();
     String s2 = attr2.getLocalName();
     return s1.compareTo( s2 );
-  }
-  
-  private boolean isFmxRelevant( Node node ) {
-    return isFmxNamespace( node.getNamespaceURI() ) || FMX_PREFIX.equals( node.getPrefix() );
-  }
-
-  private boolean isFmxNamespace( String text ) {
-    return FMX_NAMESPACE.equals( text );
   }
 
 } /* ENDCLASS */
