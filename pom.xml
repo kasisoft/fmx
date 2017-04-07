@@ -13,7 +13,7 @@
   
   <groupId>com.kasisoft</groupId>
   <artifactId>com.kasisoft.libs.fmx</artifactId>
-  <version>0.1</version>
+  <version>0.2-SNAPSHOT</version>
 
   <name>FMX :: Kasisoft Freemarker Extension</name>
   <url>https://kasisoft.com/bitbucket/projects/LIBS/repos/com.kasisoft.libs.fmx</url>
