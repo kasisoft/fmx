@@ -6,36 +6,38 @@ the templating.
 
 
 Contact
--------
+=======
 
 * daniel.kasmeroglu@kasisoft.net
 
 
 Requirements
-------------
+============
 
  * Java 8
 
 
-Development Setup
------------------
+Jira
+====
+
+* https://kasisoft.com/jira/projects/FMX/issues
+
+
+Maven
+=====
 
 I assume that you're familiar with Maven. If not I suggest to visit the following page:
 
 * https://maven.apache.org/
 
-
-Maven
------
-
 Releases
-========
+--------
 
 * TBD
 
 
 Snapshots
-=========
+---------
 
 Snapshots can be used while accessing a dedicated maven repository. Your POM needs the following settings:
 
@@ -61,7 +63,7 @@ Snapshots can be used while accessing a dedicated maven repository. Your POM nee
      
 
 License
--------
+=======
 
 MIT License
 
