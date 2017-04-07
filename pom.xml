@@ -7,7 +7,7 @@
   
   <groupId>com.kasisoft</groupId>
   <artifactId>com.kasisoft.libs.fmx</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1</version>
 
   <name>FMX :: Kasisoft Freemarker Extension</name>
   <description>Freemarker extension to handle XML based templates.</description>
