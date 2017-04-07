@@ -112,8 +112,8 @@ public class FmxTranslatorTest {
   }
   
   private Object[] createRecord( ClassLoader cl, String testcase ) {
-    String fmx = loadText( cl, String.format( "%s.fmx", testcase ) );
-    String ftl = loadText( cl, String.format( "%s.ftl", testcase ) ); 
+    String fmx = loadText( cl, String.format( "basic/%s.fmx", testcase ) );
+    String ftl = loadText( cl, String.format( "basic/%s.ftl", testcase ) ); 
     return new Object[] { fmx, ftl };
   }
   

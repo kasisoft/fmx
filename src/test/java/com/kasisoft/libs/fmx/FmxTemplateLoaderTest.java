@@ -34,13 +34,13 @@ public class FmxTemplateLoaderTest {
   @Test
   public void findTemplateSource() throws Exception {
     
-    Object template1 = fmxTemplateLoader.findTemplateSource( "bibo.fmx" );
+    Object template1 = fmxTemplateLoader.findTemplateSource( "basic/bibo.fmx" );
     assertNull( template1 );
 
-    Object template2 = fmxTemplateLoader.findTemplateSource( "01_unchanged.ftl" );
+    Object template2 = fmxTemplateLoader.findTemplateSource( "basic/01_unchanged.ftl" );
     assertNull( template2 );
 
-    Object template3 = fmxTemplateLoader.findTemplateSource( "01_unchanged.fmx" );
+    Object template3 = fmxTemplateLoader.findTemplateSource( "basic/01_unchanged.fmx" );
     assertNotNull( template3 );
 
   }
@@ -48,7 +48,7 @@ public class FmxTemplateLoaderTest {
   @Test
   public void getLastModified() throws Exception {
 
-    Object template1 = fmxTemplateLoader.findTemplateSource( "01_unchanged.fmx" );
+    Object template1 = fmxTemplateLoader.findTemplateSource( "basic/01_unchanged.fmx" );
     assertNotNull( template1 );
 
     long lm1 = fmxTemplateLoader.getLastModified( template1 );
@@ -59,7 +59,7 @@ public class FmxTemplateLoaderTest {
   @Test
   public void getReader() throws Exception {
 
-    Object template1 = fmxTemplateLoader.findTemplateSource( "22_import.fmx" );
+    Object template1 = fmxTemplateLoader.findTemplateSource( "basic/22_import.fmx" );
     assertNotNull( template1 );
 
     String text = null;
