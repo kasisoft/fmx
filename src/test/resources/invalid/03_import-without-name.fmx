@@ -1,0 +1,4 @@
+<fmx:import fmx:path="/macros.ftl">
+  <main second="bibo" attr1="dodo" third="cecil">
+  </main>
+</fmx:import>

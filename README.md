@@ -11,7 +11,6 @@ Contact
 * daniel.kasmeroglu@kasisoft.net
 
 
-
 Requirements
 ============
 
@@ -30,6 +29,7 @@ Maven
 I assume that you're familiar with Maven. If not I suggest to visit the following page:
 
 * https://maven.apache.org/
+
 
 Releases
 --------

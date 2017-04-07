@@ -1,0 +1,4 @@
+<fmx:include>
+  <main second="bibo" attr1="dodo" third="cecil">
+  </main>
+</fmx:include>
