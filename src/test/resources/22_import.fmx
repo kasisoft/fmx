@@ -1,0 +1,4 @@
+<fmx:import fmx:path="/bibo/sample.ftl" fmx:name="dodo"/>
+<main second="bibo" attr1="do'do" third='ce"cil'>
+    <rpg:element xmlns:rpg="https://fluffy.com/rpg" a="do&lt;do&gt;"/>
+</main>

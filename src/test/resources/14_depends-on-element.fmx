@@ -1,0 +1,3 @@
+<my-element b="second" a="first" fmx:depends="items">
+  <inner c="third"/>
+</my-element>

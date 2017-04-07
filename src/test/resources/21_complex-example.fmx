@@ -1,0 +1,8 @@
+<fmx:depends fmx:value="gollum">
+  <fmx:list fmx:value="dodo" fmx:it="loki">
+    <my-element b="second" a="${loki}" fmx:wrap="loki">
+      <inner1 c="third"/>
+      <inner2 c="third"/>
+    </my-element>
+  </fmx:list>
+</fmx:depends>

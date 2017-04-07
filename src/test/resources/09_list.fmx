@@ -1,0 +1,5 @@
+<fmx:list fmx:value="items">
+  <my-element b="${it}" a="first">
+    <inner c="third"/>
+  </my-element>
+</fmx:list>

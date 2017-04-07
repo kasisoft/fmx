@@ -1,0 +1,5 @@
+<fmx:list fmx:value="items" fmx:it="myIterator">
+  <my-element b="${myIterator}" a="first">
+    <inner c="third"/>
+  </my-element>
+</fmx:list>

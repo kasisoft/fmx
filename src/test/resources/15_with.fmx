@@ -1,0 +1,5 @@
+<fmx:with fmx:model="items">
+  <my-element b="second" a="first">
+    <inner c="third"/>
+  </my-element>
+</fmx:with>

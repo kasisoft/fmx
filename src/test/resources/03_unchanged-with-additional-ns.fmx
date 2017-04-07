@@ -1,0 +1,3 @@
+<main second="bibo" attr1="dodo" third='cecil'>
+    <rpg:element xmlns:rpg="https://fluffy.com/rpg" a="dodo"/>
+</main>
