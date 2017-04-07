@@ -2,7 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-
+  
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>9</version>
+  </parent>  
+  
   <packaging>jar</packaging>
   
   <groupId>com.kasisoft</groupId>
@@ -10,6 +16,7 @@
   <version>0.1</version>
 
   <name>FMX :: Kasisoft Freemarker Extension</name>
+  <url>https://kasisoft.com/bitbucket/projects/LIBS/repos/com.kasisoft.libs.fmx</url>
   <description>Freemarker extension to handle XML based templates.</description>
   
   <licenses>
@@ -31,15 +38,15 @@
     <tag>HEAD</tag>
   </scm>
   
-  <ciManagement>
-    <system>Jenkins</system>
-    <url>https://kasisoft.com/ci/job/libs.com.kasisoft.libs.fmx/</url>
-  </ciManagement>
-  
   <issueManagement>
     <system>jira</system>
     <url>https://kasisoft.com/jira/browse/FMX</url>
   </issueManagement>
+  
+  <ciManagement>
+    <system>Jenkins</system>
+    <url>https://kasisoft.com/ci/job/libs.com.kasisoft.libs.fmx/</url>
+  </ciManagement>
   
   <developers>
     <developer>
@@ -48,7 +55,7 @@
       <email>daniel.kasmeroglu@kasisoft.net</email>
     </developer>
   </developers>
-    
+  
   <properties>
   
     <java.version>1.8</java.version>
