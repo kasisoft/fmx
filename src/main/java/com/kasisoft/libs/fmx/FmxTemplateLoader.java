@@ -30,7 +30,7 @@ public class FmxTemplateLoader implements TemplateLoader {
   private static final Predicate<String> IS_FMX = $ -> $.endsWith( SUFFIX ); 
   
   TemplateLoader            delegate;
-  FmxTranslator   translator;
+  FmxTranslator2            translator;
   Predicate<String>         isFmx;
   
   public FmxTemplateLoader( @Nonnull TemplateLoader loader ) {
@@ -39,7 +39,7 @@ public class FmxTemplateLoader implements TemplateLoader {
   
   public FmxTemplateLoader( @Nonnull TemplateLoader loader, Predicate<String> test ) {
     delegate    = loader;
-    translator  = new FmxTranslator();
+    translator  = new FmxTranslator2();
     isFmx       = test != null ? test : IS_FMX;
   }
   

@@ -1,5 +1,0 @@
-<fmx:cms-component content="component" fmx:list="components" fmx:it="component" fmx:depends="wobble" fmx:disable-depends="wumpi">
-  <fmx:include fmx:path="/dodo/bibo.ftl" />
-  <p>${wobble}</p>
-</fmx:cms-component>
-

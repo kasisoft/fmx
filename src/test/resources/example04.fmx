@@ -1,4 +1,0 @@
-<list xmlns:fmx="https://kasisoft.com/namespaces/fmx/0.1">
-  <item fmx:list="content.list" name="${bobo.element}" fmx:it="bobo">
-  </item>
-</list>

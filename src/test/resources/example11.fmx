@@ -1,3 +1,0 @@
-<a fmx:wrap="model.link?has_content" href="${model.link.link!}">
-  <div>my content</div>
-</a>
