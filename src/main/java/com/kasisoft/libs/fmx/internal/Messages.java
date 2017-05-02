@@ -22,7 +22,7 @@ public class Messages {
   @I18N("The 'fmx:list' element requires an 'fmx:value' attribute and allows 'fmx:it' to provide an iterator name.")
   public static String    error_list_values;
 
-  @I18N("The 'fmx:with' element requires an 'fmx:model' attribute and allows to rename it using 'fmx:name'.")
+  @I18N("The 'fmx:with' element requires an 'fmx:value' attribute and allows to rename it using 'fmx:name'.")
   public static String    error_with_values;
   
   @I18N("Missing 'fmx:model' attribute for 'fmx:with' element !")
