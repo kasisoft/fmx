@@ -35,10 +35,14 @@ public class FmxTemplateLoader implements TemplateLoader {
   public FmxTemplateLoader( @Nonnull TemplateLoader loader ) {
     this( loader, null );
   }
-  
+
   public FmxTemplateLoader( @Nonnull TemplateLoader loader, Predicate<String> test ) {
+    this( loader, test, null );
+  }
+  
+  public FmxTemplateLoader( @Nonnull TemplateLoader loader, Predicate<String> test, Function<String, String> directives ) {
     delegate    = loader;
-    translator  = new FmxTranslator();
+    translator  = new FmxTranslator( null, null, directives );
     isFmx       = test != null ? test : IS_FMX;
   }
   
