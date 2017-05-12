@@ -43,6 +43,8 @@ public class FmxElement extends NodeWrapper<Element> {
     case root       : emitRoot      ( ctx ); break;
     case with       : emitWith      ( ctx ); break;
     case importDecl : emitImport    ( ctx ); break;
+    case escape     : emitEscape    ( ctx ); break;
+    case compress   : emitCompress  ( ctx ); break;
     }
   }
 
@@ -69,6 +71,30 @@ public class FmxElement extends NodeWrapper<Element> {
     ctx.appendF( "[#assign %s=%s /]\n", modelName, modelExpr );
     emitChildren( ctx );
     ctx.appendF( "[#assign %s=%s /]\n", modelName, var );
+  }
+
+  /**
+   * Generates an escape block.
+   *  
+   * @param ctx   Receiver for the emitted code.
+   */
+  private void emitEscape( TranslationContext ctx ) {
+    String name = FmxAttr.name.getRequiredValue( getNode(), error_escape_without_name );
+    String expr = FmxAttr.expr.getRequiredValue( getNode(), error_escape_without_expr );
+    ctx.appendF( "[#escape %s as %s]\n", name, expr );
+    emitChildren( ctx );
+    ctx.append( "[/#escape]\n" );
+  }
+
+  /**
+   * Generates a compress block.
+   *  
+   * @param ctx   Receiver for the emitted code.
+   */
+  private void emitCompress( TranslationContext ctx ) {
+    ctx.append( "[#compress]\n" );
+    emitChildren( ctx );
+    ctx.append( "[/#compress]\n" );
   }
 
   /**

@@ -94,6 +94,15 @@ public class FmxTranslatorTest {
 
     // embedded ftl
     "24_embedded-ftl", 
+    
+    // escape block
+    "25_escape",
+    
+    // compress block
+    "26_compress",
+    
+    // cdata block
+    "27_cdata",
 
   } );
   

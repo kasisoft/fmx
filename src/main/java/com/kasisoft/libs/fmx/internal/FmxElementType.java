@@ -40,6 +40,12 @@ public enum FmxElementType {
   // represent a directive
   directive( "directive" ),
   
+  // escape block
+  escape( "escape" ),
+  
+  // compress block
+  compress( "compress" ),
+  
   // pseudo element used to wrap the content
   root( "root" );
   

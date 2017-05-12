@@ -1,0 +1,3 @@
+<fmx:escape fmx:name="x" fmx:expr="x?html">
+  <p>BOBO</p>
+</fmx:escape>

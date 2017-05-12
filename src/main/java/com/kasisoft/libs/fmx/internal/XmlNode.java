@@ -24,10 +24,17 @@ public class XmlNode extends NodeWrapper<Node> {
   
   @Override
   public void emit( TranslationContext ctx ) {
+    int    type    = getNode().getNodeType();
     String value   = getNode().getNodeValue();
     String content = StringFunctions.cleanup( value );
     if( content != null ) {
+      if( type == Node.CDATA_SECTION_NODE ) {
+        ctx.append( "<![CDATA[" );
+      }
       ctx.append( content );
+      if( type == Node.CDATA_SECTION_NODE ) {
+        ctx.append( "]]>");
+      }
       ctx.append( "\n" );
     }
   }

@@ -1,11 +1,10 @@
 package com.kasisoft.libs.fmx;
 
-import static com.kasisoft.libs.fmx.internal.Messages.*;
 import static com.kasisoft.libs.fmx.FmxConstants.*;
+import static com.kasisoft.libs.fmx.internal.Messages.*;
 
 import com.kasisoft.libs.fmx.internal.*;
 
-import org.slf4j.*;
 import org.w3c.dom.*;
 import org.w3c.dom.Element;
 
@@ -18,6 +17,8 @@ import java.util.*;
 
 import java.io.*;
 
+import lombok.extern.slf4j.*;
+
 import lombok.experimental.*;
 
 import lombok.*;
@@ -26,10 +27,9 @@ import lombok.*;
  * @author daniel.kasmeroglu@kasisoft.net
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class FmxTranslator {
   
-  private static final Logger log = LoggerFactory.getLogger( FmxTranslator.class );
-
   // a root element so it's made sure that multiple xml elements are embedded in a root element
   private static final String WRAPPER = "<%s:root xmlns:%s=\"%s\" xmlns:%s=\"%s\">%%s</%s:root>";
   
@@ -52,7 +52,6 @@ public class FmxTranslator {
     wrapper           = String.format( WRAPPER, nsPrefix, nsPrefix, FMX_NAMESPACE, nsTPrefix, FMT_NAMESPACE, nsPrefix );
     directiveProvider = directives != null ? directives : $ -> $;
   }
-  
   
   /**
    * This main function converts the supplied xml based input into the corresponding fmx ftl code.

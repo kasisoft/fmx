@@ -25,6 +25,12 @@ public class Messages {
   @I18N("The 'fmx:with' element requires an 'fmx:value' attribute and allows to rename it using 'fmx:name'.")
   public static String    error_with_values;
   
+  @I18N("The 'fmx:escape' elements must provide an attribute 'fmx:expr'.")
+  public static String    error_escape_without_expr;
+  
+  @I18N("The 'fmx:escape' elements must provide an attribute 'fmx:name'.")
+  public static String    error_escape_without_name;
+  
   @I18N("Missing 'fmx:model' attribute for 'fmx:with' element !")
   public static String    missing_fmx_model;
 

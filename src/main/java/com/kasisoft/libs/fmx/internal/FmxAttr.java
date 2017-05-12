@@ -22,8 +22,9 @@ import lombok.*;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public enum FmxAttr {
 
-  it        ( "it"      ),
   depends   ( "depends" ),
+  expr      ( "expr"    ),
+  it        ( "it"      ),
   list      ( "list"    ),
   name      ( "name"    ),
   path      ( "path"    ),
