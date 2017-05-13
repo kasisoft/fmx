@@ -1,5 +1,3 @@
 [#escape x as x?html]
-<p>
-BOBO
-</p>
+  <p>BOBO</p>
 [/#escape]

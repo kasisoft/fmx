@@ -38,36 +38,43 @@ public enum FmxAttr {
     literal = lit;
     LocalData.map.put( literal, this );
   }
-  
-  public Attr getAttr( Element element ) {
-    return element.getAttributeNodeNS( FMX_NAMESPACE, literal );
-  }
-  
-  public String getValue( Element element ) {
-    String result = null;
-    Attr   attr   = getAttr( element );
-    if( attr != null ) {
-      result = StringFunctions.cleanup( attr.getNodeValue() );
+
+  private XmlAttr getAttr( List<XmlAttr> attrs ) {
+    XmlAttr result = null;
+    for( XmlAttr attr : attrs ) {
+      if( FMX_NAMESPACE.equals( attr.getNsUri() ) && attr.getLocalName().equals( literal ) ) {
+        result = attr;
+        break;
+      }
     }
     return result;
   }
-
-  public String getValue( Element element, String defValue ) {
-    String result = getValue( element );
+  
+  public String getValue( List<XmlAttr> attrs ) {
+    String  result = null;
+    XmlAttr attr   = getAttr( attrs );
+    if( attr != null ) {
+      result = StringFunctions.cleanup( attr.getAttrValue() );
+    }
+    return result;
+  }
+  
+  public String getValue( List<XmlAttr> attrs, String defValue ) {
+    String result = getValue( attrs );
     if( result == null ) {
       result = defValue;
     }
     return result;
   }
-
-  public String getRequiredValue( Element element, String errorMessage ) {
-    String result = getValue( element );
+  
+  public String getRequiredValue( List<XmlAttr> attrs, String errorMessage ) {
+    String result = getValue( attrs );
     if( result == null ) {
       throw new FmxException( errorMessage );
     }
     return result;
   }
-
+  
   public static FmxAttr valueByAttr( @Nonnull Attr attr ) {
     FmxAttr result = null;
     if( FMX_NAMESPACE.equals( attr.getNamespaceURI() ) ) {

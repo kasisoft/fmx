@@ -7,15 +7,11 @@ import lombok.*;
  */
 public class FmxException extends RuntimeException {
 
-  public FmxException() {
-    super();
-  }
-
   public FmxException( String message ) {
     super( message );
   }
 
-  public FmxException( Throwable cause ) {
+  private FmxException( Throwable cause ) {
     super( cause );
   }
 

@@ -4,6 +4,6 @@
   <inner2 c="third"/>
 </my-element>
 [#else]
-<inner1 c="third"/>
-<inner2 c="third"/>
+  <inner1 c="third"/>
+  <inner2 c="third"/>
 [/#if]

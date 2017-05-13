@@ -1,3 +1,3 @@
 [#compress]
-BIBO
+  BIBO
 [/#compress]

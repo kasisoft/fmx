@@ -1,5 +1,3 @@
 [#compress]
-<p>
-BOBO
-</p>
+  <p>BOBO</p>
 [/#compress]

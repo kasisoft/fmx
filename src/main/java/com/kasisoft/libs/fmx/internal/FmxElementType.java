@@ -1,9 +1,5 @@
 package com.kasisoft.libs.fmx.internal;
 
-import static com.kasisoft.libs.fmx.FmxConstants.*;
-
-import org.w3c.dom.*;
-
 import javax.annotation.*;
 
 import java.util.*;
@@ -56,16 +52,8 @@ public enum FmxElementType {
     LocalData.map.put( literal, this );
   }
   
-  public static FmxElementType valueByNode( @Nonnull Node node ) {
-    FmxElementType result = null;
-    if( FMX_NAMESPACE.equals( node.getNamespaceURI() ) ) {
-      result = LocalData.map.get( node.getLocalName() );
-    }
-    return result;
-  }
-
-  public static FmxElementType valueByNode( @Nonnull Node node, FmxElementType defaultValue ) {
-    FmxElementType result = LocalData.map.get( node.getLocalName() );
+  public static FmxElementType valueByName( @Nonnull String name, FmxElementType defaultValue ) {
+    FmxElementType result = LocalData.map.get( name );
     if( result == null ) {
       result = defaultValue;
     }

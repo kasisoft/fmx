@@ -1,23 +1,17 @@
 package com.kasisoft.libs.fmx;
 
 import static com.kasisoft.libs.fmx.FmxConstants.*;
-import static com.kasisoft.libs.fmx.internal.Messages.*;
 
 import com.kasisoft.libs.fmx.internal.*;
 
-import org.w3c.dom.*;
-import org.w3c.dom.Element;
+import org.xml.sax.*;
 
 import javax.annotation.*;
-import javax.xml.bind.*;
+import javax.xml.parsers.*;
 
 import java.util.function.*;
 
-import java.util.*;
-
 import java.io.*;
-
-import lombok.extern.slf4j.*;
 
 import lombok.experimental.*;
 
@@ -27,7 +21,6 @@ import lombok.*;
  * @author daniel.kasmeroglu@kasisoft.net
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Slf4j
 public class FmxTranslator {
   
   // a root element so it's made sure that multiple xml elements are embedded in a root element
@@ -37,6 +30,7 @@ public class FmxTranslator {
   String                     nsTPrefix;
   String                     wrapper;
   Function<String, String>   directiveProvider;
+  SAXParserFactory           saxParserFactory;
   
   public FmxTranslator() {
     this( null, null, null );
@@ -51,6 +45,8 @@ public class FmxTranslator {
     nsTPrefix         = tPrefix != null ? tPrefix : FMT_PREFIX;
     wrapper           = String.format( WRAPPER, nsPrefix, nsPrefix, FMX_NAMESPACE, nsTPrefix, FMT_NAMESPACE, nsPrefix );
     directiveProvider = directives != null ? directives : $ -> $;
+    saxParserFactory  = SAXParserFactory.newInstance();
+    saxParserFactory.setNamespaceAware( true );
   }
   
   /**
@@ -62,93 +58,21 @@ public class FmxTranslator {
    * 
    * @throws   FmxException
    */
-  public String convert( @Nonnull String xmlInput ) {
-    try {
-      NodeWrapper rootWrapper = decorate( xmlInput );
-      String      result      = null;
-      logWrapper( rootWrapper );
-      if( rootWrapper != null ) {
-        try( TranslationContext ctx = new TranslationContext( directiveProvider ) ) {
-          rootWrapper.emit( ctx );
-          result = ctx.toString();
-        }
-      }
-      return result;
+   public String convert( @Nonnull String xmlInput ) {
+    try( TranslationContext ctx = new TranslationContext( nsPrefix, directiveProvider ) ) {
+      decorate( xmlInput, ctx );
+      return ctx.toString();
     } catch( Exception ex ) {
       throw FmxException.wrap( ex );
     }
   }
-  
-  private void logWrapper( NodeWrapper wrapper ) {
-    if( log.isTraceEnabled() ) {
-      if( wrapper != null ) {
-        log.trace( "{}", wrapper );
-      } else {
-        log.trace( error_no_root_element );
-      }
-    }
-  }
-  
-  private NodeWrapper decorate( String xmlInput ) throws IOException {
-    String wrapped     = String.format( wrapper, xmlInput );
-    Node   rootElement = null;
+
+  private void decorate( String xmlInput, TranslationContext ctx ) throws Exception {
+    String wrapped = String.format( wrapper, xmlInput );
     try( Reader reader = new StringReader( wrapped ) ) {
-      rootElement = (Node) JAXB.unmarshal( reader, Object.class );
+      SAXParser saxParser = saxParserFactory.newSAXParser();
+      saxParser.parse( new InputSource( reader ), ctx );
     }
-    NodeWrapper result = null;
-    if( rootElement != null ) {
-      result = decorate( rootElement ); 
-    }
-    return result;
-  }
-  
-  private NodeWrapper decorate( Node node ) {
-    NodeWrapper result = null;
-    if( node.getNodeType() == Node.ELEMENT_NODE ) {
-      Element     element    = (Element) node;
-      List<Attr>  attributes = getAttributes( element.getAttributes() );
-      if( IS_FMX_RELEVANT.test( element ) ) {
-        // a specific fmx element
-        result = new FmxElement( element, FmxElementType.valueByNode( element, FmxElementType.directive ), attributes );
-      } else if( HAS_FMX_ATTRIBUTE.test( attributes ) ) {
-        // some fmx attributes
-        result = new FmxXmlElement( element, attributes );
-      } else {
-        // simple xml element
-        result = new XmlElement( element, attributes );
-      }
-      
-    } else {
-      // simple node
-      result = new XmlNode( node );
-    }
-    addChildren( result );
-    return result;
-  }
-  
-  private void addChildren( NodeWrapper parent ) {
-    NodeList children = parent.getNode().getChildNodes();
-    for( int i = 0; i < children.getLength(); i++ ) {
-      parent.getChildren().add( decorate( children.item(i) ) );
-    }
-  }
-    
-  private List<Attr> getAttributes( NamedNodeMap namedNodeMap ) {
-    List<Attr> result = Collections.emptyList();
-    if( namedNodeMap != null ) {
-      result = new ArrayList<>( namedNodeMap.getLength() );
-      for( int i = 0; i < namedNodeMap.getLength(); i++ ) {
-        result.add( (Attr) namedNodeMap.item(i) );
-      }
-      Collections.sort( result, this::compareAttr );
-    }
-    return result;
-  }
-  
-  private int compareAttr( Attr attr1, Attr attr2 ) {
-    String s1 = attr1.getLocalName();
-    String s2 = attr2.getLocalName();
-    return s1.compareTo( s2 );
   }
 
 } /* ENDCLASS */
