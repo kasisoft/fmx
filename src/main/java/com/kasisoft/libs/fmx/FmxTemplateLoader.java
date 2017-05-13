@@ -21,6 +21,7 @@ import freemarker.cache.*;
 /**
  * This loader uses another {@link TemplateLoader} instance to load <code>.fmx</code> templates. It  
  * <b>WON'T</b> load normal <code>.ftl</code> templates.  
+ * The translation of fmx to ftl syntax can be followed if logging is set to trace level.
  * 
  * @author daniel.kasmeroglu@kasisoft.net
  */

@@ -1,6 +1,6 @@
-[#assign fmx_old0=dodo! /]
+[#assign fmx_old4=dodo! /]
 [#assign dodo=items /]
 <my-element a="first" b="second">
   <inner c="third"/>
 </my-element>
-[#assign dodo=fmx_old0 /]
+[#assign dodo=fmx_old4 /]

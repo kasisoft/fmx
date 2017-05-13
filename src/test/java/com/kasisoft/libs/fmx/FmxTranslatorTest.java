@@ -104,6 +104,9 @@ public class FmxTranslatorTest {
     // cdata block
     "27_cdata",
 
+    // wrap on an element with list
+    "28_wrap-with-list",
+
   } );
   
   FmxTranslator    translator;
@@ -123,7 +126,7 @@ public class FmxTranslatorTest {
   private Object[] createRecord( ClassLoader cl, String testcase ) {
     String fmx = loadText( cl, String.format( "basic/%s.fmx", testcase ) );
     String ftl = loadText( cl, String.format( "basic/%s.ftl", testcase ) ); 
-    return new Object[] { fmx, ftl };
+    return new Object[] { testcase, fmx, ftl };
   }
   
   private String loadText( ClassLoader cl, String resource ) {
@@ -131,7 +134,7 @@ public class FmxTranslatorTest {
   }
 
   @Test(dataProvider = "convertData")
-  public void convert( String fmxContent, String ftlContent ) {
+  public void convert( String testcase, String fmxContent, String ftlContent ) {
     String converted  = translator.convert( fmxContent );
     assertThat( converted, is( ftlContent ) );
   }

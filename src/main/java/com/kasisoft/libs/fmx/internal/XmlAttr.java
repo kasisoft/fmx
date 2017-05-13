@@ -1,7 +1,5 @@
 package com.kasisoft.libs.fmx.internal;
 
-import com.kasisoft.libs.common.model.*;
-
 import javax.annotation.*;
 
 import lombok.experimental.*;
@@ -13,34 +11,27 @@ import lombok.*;
  */
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class XmlAttr extends Triple<String, String, String> implements Comparable<XmlAttr> {
+public class XmlAttr implements Comparable<XmlAttr> {
 
+  String   nsUri;
+  String   qName;
+  String   attrValue;
   String   localName;
   String   prefix;
   
-  public XmlAttr( String value1, String value2, String value3 ) {
-    super( value1, value2, value3 );
-    localName = value2;
+  public XmlAttr( String namespaceUri, String qualifiedName, String value ) {
+    nsUri     = namespaceUri;
+    qName     = qualifiedName;
+    attrValue = value;
+    localName = qualifiedName;
     prefix    = null;
-    int colon = value2.indexOf(':');
+    int colon = qualifiedName.indexOf(':');
     if( colon > 0 ) {
-      prefix    = value2.substring( 0, colon );
-      localName = value2.substring( colon + 1 ); 
+      prefix    = qualifiedName.substring( 0, colon );
+      localName = qualifiedName.substring( colon + 1 ); 
     }
   }
   
-  public String getNsUri() {
-    return getValue1();
-  }
-  
-  public String getQName() {
-    return getValue2();
-  }
-
-  public String getAttrValue() {
-    return getValue3();
-  }
-
   @Override
   public int compareTo( @Nonnull XmlAttr o ) {
     return getQName().compareTo( o.getQName() );

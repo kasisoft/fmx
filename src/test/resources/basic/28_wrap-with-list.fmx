@@ -1,0 +1,4 @@
+<my-element b="second" a="first" fmx:wrap="condition" fmx:list="items">
+  <inner1 c="third"/>
+  <inner2 c="third"/>
+</my-element>

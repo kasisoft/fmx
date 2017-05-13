@@ -59,15 +59,16 @@ public class FmxTranslator {
    * @throws   FmxException
    */
    public String convert( @Nonnull String xmlInput ) {
-    try( TranslationContext ctx = new TranslationContext( nsPrefix, directiveProvider ) ) {
-      decorate( xmlInput, ctx );
+    try {
+      TranslationContext ctx = new TranslationContext( nsPrefix, directiveProvider );
+      convert( xmlInput, ctx );
       return ctx.toString();
     } catch( Exception ex ) {
       throw FmxException.wrap( ex );
     }
   }
 
-  private void decorate( String xmlInput, TranslationContext ctx ) throws Exception {
+  private void convert( String xmlInput, TranslationContext ctx ) throws Exception {
     String wrapped = String.format( wrapper, xmlInput );
     try( Reader reader = new StringReader( wrapped ) ) {
       SAXParser saxParser = saxParserFactory.newSAXParser();

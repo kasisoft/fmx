@@ -3,7 +3,6 @@ package com.kasisoft.libs.fmx.internal;
 import static com.kasisoft.libs.fmx.FmxConstants.*;
 import static com.kasisoft.libs.fmx.internal.Messages.*;
 
-import com.kasisoft.libs.common.model.*;
 import com.kasisoft.libs.common.text.*;
 import com.kasisoft.libs.common.util.*;
 
@@ -15,6 +14,7 @@ import javax.annotation.*;
 import java.util.function.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
 import lombok.experimental.*;
 
@@ -24,43 +24,87 @@ import lombok.*;
  * @author daniel.kasmeroglu@kasisoft.net
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public final class TranslationContext extends DefaultHandler implements AutoCloseable {
+public final class TranslationContext extends DefaultHandler {
 
   private static final Bucket<StringFBuilder> STRINGFBUILDER = BucketFactories.newStringFBuilderBucket();
+  private static final AtomicLong             COUNTER        = new AtomicLong();
   
-  StringFBuilder                builder;
-  Function<String, String>      directiveProvider;
+  String                        content;
   StringFBuilder                replacer;
-  long                          counter;
-  Stack<Object>                 closings;
-  Stack<Boolean>                fmxXml;
-  Stack<Object>                 fmxXmlExpressions;
-  Stack<Integer>                innerWraps;
-  int                           lastOpen;
-  Character                     consume;  
+  StringFBuilder                builder;
+  
+  // mapper for directive names
+  Function<String, String>      directiveProvider;
+  
+  // test for fmx configurations (uri, prefix)
   BiPredicate<String, String>   isFmxRelevant;
   Predicate<List<XmlAttr>>      hasFmxAttribute;
+  
+  // a stack of flags per element: the scenario of a normal xml element which contains fmx attributes
+  // requires attributes which aren't passed through endElement so we need to remember
+  Stack<Boolean>                fmxXml;
+  
+  // the with scenario requires to restore the previous model when done, so we need to remember the
+  // temporarily used variable
+  Stack<WithRecord>             withRecords;
+  
+  // an xml element with fmx attributes can generate multiple statements which need to be closed in the end,
+  // so we remember here which statements had been generated
+  Stack<Boolean>                fmxXmlOnElement;
+  Stack<String>                 indentions;
+
+  // this stack is used to remember the begin of the inner xml tree, so if the wrapping-condition is false
+  // we're rendering the inner content into the else part of the if-then-else ftl statement
+  Stack<Integer>                innerWraps;
+  
+  // remember the location after the last opening xml element. if the closing xml element follows immediately
+  // thereafter we can generate a directly close xml element
+  int                           lastOpen;
+  
+  // we're generating a linefeed before closing some ftl statements, so we remember this. if characters 
+  // containing a line feed will be processed we're dropping this linefeed (this linefeed essentially gets
+  // moved)
+  Character                     consume;  
 
   
   public TranslationContext( @Nonnull String fmxPrefix, Function<String, String> directives ) {
-    builder           = STRINGFBUILDER.allocate();
-    replacer          = STRINGFBUILDER.allocate();
-    directiveProvider = directives;
-    counter           = 0;
-    closings          = new Stack<>();
-    fmxXml            = new Stack<>();
-    fmxXmlExpressions = new Stack<>();
-    innerWraps        = new Stack<>();
     lastOpen          = -1;
     consume           = null;
+    directiveProvider = directives;
     isFmxRelevant     = ($1, $2) -> FMX_NAMESPACE.equals( $1 ) || (($2 != null) && $2.startsWith( fmxPrefix ) );
     hasFmxAttribute   = $ -> $.parallelStream()
       .map( $_ -> isFmxRelevant.test( $_.getNsUri(), $_.getQName() ) )
       .reduce( false, ($1, $2) -> $1 || $2 );
   }
   
+  @Override
+  public void startDocument() throws SAXException {
+    builder           = STRINGFBUILDER.allocate();
+    replacer          = STRINGFBUILDER.allocate();
+    withRecords       = new Stack<>();
+    fmxXml            = new Stack<>();
+    fmxXmlOnElement   = new Stack<>();
+    indentions        = new Stack<>();
+    innerWraps        = new Stack<>();
+    content           = "";
+  }
+
+  @Override
+  public void endDocument() throws SAXException {
+    content           = builder.toString();
+    STRINGFBUILDER.free( builder  );
+    STRINGFBUILDER.free( replacer );
+    builder           = null;
+    replacer          = null;
+    withRecords       = null;
+    fmxXml            = null;
+    fmxXmlOnElement   = null;
+    indentions        = null;
+    innerWraps        = null;
+  }
+
   private String newVar() {
-    return String.format( "fmx_old%d", counter++ );
+    return String.format( "fmx_old%d", COUNTER.incrementAndGet() );
   }
   
   private void xmlAttribute( XmlAttr attr ) {
@@ -80,12 +124,6 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
       } else {
         builder.appendF( " %s=\"%s\"", localName, nodeValue );
       }
-    }
-  }
-
-  private void fmAttribute( XmlAttr attr ) {
-    if( ! FMX_NAMESPACE.equals( attr.getNsUri() ) ) {
-      builder.appendF( " %s=\"%s\"", attr.getQName(), attr.getAttrValue() );
     }
   }
 
@@ -109,18 +147,8 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
   }
 
   @Override
-  public void close() {
-    if( builder != null ) {
-      STRINGFBUILDER.free( builder  );
-      STRINGFBUILDER.free( replacer );
-      builder  = null;
-      replacer = null;
-    }
-  }
-  
-  @Override
   public String toString() {
-    return builder.toString();
+    return content;
   }
 
   @Override
@@ -182,7 +210,7 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
     case compress   : emitCompressClose  ( uri, localName, qName ); break;
     }
   }
-
+  
   private void startFmxXmlElement( String uri, String localName, String qName, List<XmlAttr> attrs ) {
 
     String dependsExpression  = FmxAttr . depends . getValue( attrs );
@@ -192,27 +220,44 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
     String withName           = FmxAttr . name    . getValue( attrs, "model" );
     String wrapExpression     = FmxAttr . wrap    . getValue( attrs );
     
-    openDepends( dependsExpression );
-    openWith( withExpression, withName );
-    openList( listExpression, iteratorName );
-    openWrap( wrapExpression );
+    String indent = getCurrentIndent();
+    if( indent.length() > 0 ) {
+      // remove the current indention
+      builder.setLength( builder.length() - indent.length() );
+    }
+    indentions.push( indent );
     
+    openDepends( indent, dependsExpression );
+    openWith( indent, withExpression, withName );
+    openList( indent, listExpression, iteratorName );
+    openWrap( indent, wrapExpression );
+    
+    // add the previously removed indention AFTER the ftl conditions have been rendered
+    builder.append( indent );
     startXmlElement( uri, localName, qName, attrs );
     
+    // remember the begin of the inner xml block
     innerWraps.push( builder.length() );
     
   }
 
   private void endFmxXmlElement( String uri, String localName, String qName ) {
+    
+    // capture the range of the inner statement
     int open  = innerWraps.pop();
     int close = builder.length();
+    
     endXmlElement( uri, localName, qName );
+    
     builder.append( "\n" );
     consume = '\n';
-    closeWrap( open, close );
-    closeList();
-    closeWith();
-    closeDepends();
+    
+    String indent = indentions.pop();
+    closeWrap( indent, open, close );
+    closeList( indent );
+    closeWith( indent );
+    closeDepends( indent );
+    
   }
 
   private void startXmlElement( String uri, String localName, String qName, List<XmlAttr> attrs ) {
@@ -232,6 +277,7 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
   
   private void endXmlElement( String uri, String localName, String qName ) {
     if( builder.length() == lastOpen ) {
+      // get rid of '>' and replace it with a directly closing '/>'
       builder.setLength( builder.length() - 1 );
       builder.append( "/>" );
     } else {
@@ -270,12 +316,12 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
     String var = newVar();
     builder.appendF( "[#assign %s=%s! /]\n", var, modelName );
     builder.appendF( "[#assign %s=%s /]", modelName, modelExpr );
-    closings.push( new Pair<String, String>( modelName, var ) );
+    withRecords.push( new WithRecord( modelName, var ) );
   }
 
   private void emitWithClose( String uri, String localName, String qName ) {
-    Pair<String, String> pair = (Pair<String, String>) closings.pop();
-    builder.appendF( "[#assign %s=%s /]\n", pair.getValue1(), pair.getValue2() );
+    WithRecord record = withRecords.pop();
+    builder.appendF( "[#assign %s=%s /]\n", record.getModelname(), record.getVarname() );
   }
 
   // directive
@@ -290,6 +336,12 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
   private void emitDirectiveClose( String uri, String localName, String qName ) {
     String name = directiveProvider.apply( localName );
     builder.appendF( "[/@%s]", name );
+  }
+
+  private void fmAttribute( XmlAttr attr ) {
+    if( ! FMX_NAMESPACE.equals( attr.getNsUri() ) ) {
+      builder.appendF( " %s=\"%s\"", attr.getQName(), attr.getAttrValue() );
+    }
   }
 
   // depends
@@ -336,17 +388,24 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
     builder.appendF( "[/#list]" );
   }
   
-  private void openWrap( String wrapExpression ) {
-    String offset = "";
+  private void openWrap( String indent, String wrapExpression ) {
     if( wrapExpression != null ) {
-      offset = getOffset();
-      builder.appendF( "[#if %s]\n", wrapExpression );
-      builder.append( offset );
+      builder.appendF( "%s[#if %s]\n", indent, wrapExpression );
     }
-    fmxXmlExpressions.push( new Pair<Boolean, String>( wrapExpression != null, offset ) );
+    fmxXmlOnElement.push( wrapExpression != null );
   }
   
-  private String getOffset() {
+  private void closeWrap( String indent, int open, int close ) {
+    boolean hasWrapExpression = fmxXmlOnElement.pop();
+    if( hasWrapExpression ) {
+      String innerContent = StringFunctions.trim( builder.substring( open, close ), " \t", false );
+      builder.appendF( "%s[#else]", indent );
+      builder.append( innerContent );
+      builder.appendF( "%s[/#if]\n", indent );
+    }
+  }
+  
+  private String getCurrentIndent() {
     String result = "";
     int i = builder.length() - 1;
     while( i >= 0 ) {
@@ -358,61 +417,50 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
     }
     return result;
   }
-  
-  private void closeWrap( int open, int close ) {
-    Pair<Boolean, String> expr = (Pair<Boolean, String>) fmxXmlExpressions.pop();
-    boolean hasWrapExpression = expr.getValue1();
-    if( hasWrapExpression ) {
-      builder.append( expr.getValue2() );
-      builder.append( "[#else]" );
-      builder.append( builder.substring( open, close ) );
-      builder.append( "[/#if]\n" );
-    }
-  }
 
-  private void openWith( String withExpression, String modelName ) {
-    Pair<String, String> result = null;
+  private void openWith( String indent, String withExpression, String modelName ) {
+    WithRecord result = null;
     if( withExpression != null ) {
       String varname = newVar();
-      builder.appendF( "[#assign %s=%s! /]\n", varname, modelName );
-      builder.appendF( "[#assign %s=%s /]\n", modelName, withExpression );
-      result = new Pair<>( modelName, varname );
+      builder.appendF( "%s[#assign %s=%s! /]\n", indent, varname, modelName );
+      builder.appendF( "%s[#assign %s=%s /]\n", indent, modelName, withExpression );
+      result = new WithRecord( modelName, varname );
     }
-    fmxXmlExpressions.push( result );
+    withRecords.push( result );
   }
   
-  private void closeWith() {
-    Pair<String, String> result = (Pair<String, String>) fmxXmlExpressions.pop();
+  private void closeWith( String indent ) {
+    WithRecord result = withRecords.pop();
     if( result != null ) { 
-      builder.appendF( "[#assign %s=%s /]\n", result.getValue1(), result.getValue2() );
+      builder.appendF( "%s[#assign %s=%s /]\n", indent, result.getModelname(), result.getVarname() );
     }
   }
 
-  private void openList( String listExpression, String iteratorName ) {
+  private void openList( String indent, String listExpression, String iteratorName ) {
     if( listExpression != null ) {
-      builder.appendF( "[#list %s as %s]\n", listExpression, iteratorName );
+      builder.appendF( "%s[#list %s as %s]\n", indent, listExpression, iteratorName );
     }
-    fmxXmlExpressions.push( listExpression != null );
+    fmxXmlOnElement.push( listExpression != null );
   }
   
-  private void closeList() {
-    boolean hasListExpression = (Boolean) fmxXmlExpressions.pop();
+  private void closeList( String indent ) {
+    boolean hasListExpression = fmxXmlOnElement.pop();
     if( hasListExpression ) { 
-      builder.append( "[/#list]\n" );
+      builder.appendF( "%s[/#list]\n", indent );
     }
   }
 
-  private void openDepends( String dependsExpression ) {
+  private void openDepends( String indent, String dependsExpression ) {
     if( dependsExpression != null ) {
-      builder.appendF( "[#if %s]\n", dependsExpression );
+      builder.appendF( "%s[#if %s]\n", indent, dependsExpression );
     }
-    fmxXmlExpressions.push( dependsExpression != null );
+    fmxXmlOnElement.push( dependsExpression != null );
   }
   
-  private void closeDepends() {
-    boolean hasDependsExpression = (Boolean) fmxXmlExpressions.pop();
+  private void closeDepends( String indent ) {
+    boolean hasDependsExpression = fmxXmlOnElement.pop();
     if( hasDependsExpression ) {
-      builder.append( "[/#if]\n" );
+      builder.appendF( "%s[/#if]\n", indent );
     }
   }
 
@@ -421,6 +469,7 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
     int pos = builder.length();
     builder.append( ch, start, length );
     if( consume != null ) {
+      // remove a redundant linefeed character
       for( int i = pos; i < pos + length; i++ ) {
         if( builder.charAt(i) == consume.charValue() ) {
           builder.deleteCharAt(i);
@@ -448,4 +497,13 @@ public final class TranslationContext extends DefaultHandler implements AutoClos
     return result;
   }
 
+  @AllArgsConstructor
+  @Getter @Setter
+  private static class WithRecord {
+  
+    String   modelname;
+    String   varname;
+    
+  } /* ENDCLASS */
+  
 } /* ENDCLASS */
