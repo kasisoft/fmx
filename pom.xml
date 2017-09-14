@@ -68,9 +68,7 @@
     <version-testng>6.9.4</version-testng>
     
     <!-- versioning: plugins -->
-    <plugin-version-cobertura-maven>2.7</plugin-version-cobertura-maven>
     <plugin-version-jacoco>0.7.9</plugin-version-jacoco>
-    <plugin-version-nexus-staging>1.6.8</plugin-version-nexus-staging>
     
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     
