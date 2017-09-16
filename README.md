@@ -1,38 +1,32 @@
-Purpose
-=======
+# Purpose
 
 This library provides an extension to [Freemarker](http://freemarker.org) which allows to use an XML based format for
 the templating.
 
 
-Contact
-=======
+# Infos
 
-* daniel.kasmeroglu@kasisoft.net
-
-
-Requirements
-============
-
- * Java 8
+* [eMail: daniel.kasmeroglu@kasisoft.net](mailto:daniel.kasmeroglu@kasisoft.net)
+* [Jira](https://kasisoft.com/jira/projects/FMX)
+* [Jenkins](https://kasisoft.com/jenkins/job/libs.com.kasisoft.libs.fmx)
+* [GIT](https://kasisoft.com/bitbucket/projects/LIBS/repos/com.kasisoft.libs.fmx)
 
 
-Jira
-====
-
-* https://kasisoft.com/jira/projects/FMX/issues
-
-
-Maven
-=====
+# Development Setup
 
 I assume that you're familiar with Maven. If not I suggest to visit the following page:
 
 * https://maven.apache.org/
 
 
-Releases
---------
+## Requirements
+
+* Java 8
+
+
+## Maven
+
+### Releases
 
      <dependency>
          <groupId>com.kasisoft</groupId>
@@ -41,8 +35,7 @@ Releases
      </dependency>
 
 
-Snapshots
----------
+### Snapshots
 
 Snapshots can be used while accessing a dedicated maven repository. Your POM needs the following settings:
 
@@ -67,8 +60,7 @@ Snapshots can be used while accessing a dedicated maven repository. Your POM nee
      
      
 
-License
-=======
+# License
 
 MIT License
 
