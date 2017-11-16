@@ -1,0 +1,3 @@
+<fmx:list fmx:value="(parent.items)![]">
+  <p>${it}</p>
+</fmx:list>

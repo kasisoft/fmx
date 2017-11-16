@@ -106,6 +106,9 @@ public class FmxTranslatorTest {
 
     // wrap on an element with list
     "28_wrap-with-list",
+    
+    // a list which value is based on a null/missing parent object
+    "29_list-without-parent-object",
 
   } );
   
