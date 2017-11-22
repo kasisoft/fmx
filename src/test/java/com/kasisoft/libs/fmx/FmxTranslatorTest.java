@@ -110,13 +110,24 @@ public class FmxTranslatorTest {
     // a list which value is based on a null/missing parent object
     "29_list-without-parent-object",
 
+    // scenario which allows to pass multiple attributes as a json map 
+    "30_context-attributes",
+    
   } );
   
   FmxTranslator    translator;
   
   @BeforeClass
   public void setup() {
-    translator = new FmxTranslator( null, null, $ -> "axolotl." + $ );
+    translator = new FmxTranslator( null, null, null, this::directiveMapper );
+  }
+  
+  private String directiveMapper( String name ) {
+    if( "cms-component".equals( name ) ) {
+      return name.replace( '-', '.' );
+    } else {
+      return "axolotl." + name;
+    }
   }
   
   @DataProvider(name = "convertData")

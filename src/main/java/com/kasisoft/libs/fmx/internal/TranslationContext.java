@@ -13,6 +13,8 @@ import javax.annotation.*;
 
 import java.util.function.*;
 
+import java.util.stream.*;
+
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
@@ -39,6 +41,9 @@ public final class TranslationContext extends DefaultHandler {
   // test for fmx configurations (uri, prefix)
   BiPredicate<String, String>   isFmxRelevant;
   Predicate<List<XmlAttr>>      hasFmxAttribute;
+  
+  // test if an attribute needs to be put into a context map
+  Predicate<XmlAttr>            isCtxAttribute;
   
   // a stack of flags per element: the scenario of a normal xml element which contains fmx attributes
   // requires attributes which aren't passed through endElement so we need to remember
@@ -71,6 +76,7 @@ public final class TranslationContext extends DefaultHandler {
     lastOpen          = -1;
     consume           = null;
     directiveProvider = directives;
+    isCtxAttribute    = $_ -> CTX_NAMESPACE.equals( $_.getNsUri() );
     isFmxRelevant     = ($1, $2) -> FMX_NAMESPACE.equals( $1 ) || (($2 != null) && $2.startsWith( fmxPrefix ) );
     hasFmxAttribute   = $ -> $.parallelStream()
       .map( $_ -> isFmxRelevant.test( $_.getNsUri(), $_.getQName() ) )
@@ -327,10 +333,35 @@ public final class TranslationContext extends DefaultHandler {
   // directive
   
   private void emitDirectiveOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String name = directiveProvider.apply( localName );
+    String             name     = directiveProvider.apply( localName );
     builder.appendF( "[@%s", name );
-    attrs.forEach( this::fmAttribute );
+    // write down all attributes that shall be kept
+    attrs.stream().filter( isCtxAttribute.negate() ).forEach( this::fmAttribute );
+    // generate a context map attribute if desired
+    emitContextAttributes( attrs.stream().filter( isCtxAttribute ).collect( Collectors.toList() ) );
     builder.append( "]" );
+  }
+  
+  private void emitContextAttributes( List<XmlAttr> ctxAttrs ) {
+    if( ! ctxAttrs.isEmpty() ) {
+      // write down the special attributes passed as a map
+      builder.appendF( " %s={", getContextAttributeName( ctxAttrs ) );
+      // if there's only one element is the attribute name so we don't need to go through the attributes
+      if( ctxAttrs.size() > 1 ) {
+        ctxAttrs.forEach( this::ctxAttribute );
+        builder.setLength( builder.length() - 2 ); // get rid of the last ', ' sequence
+      }
+      builder.appendF( "}" );
+    }
+  }
+  
+  private String getContextAttributeName( List<XmlAttr> ctxAttrs ) {
+    String            result    = null;
+    Optional<XmlAttr> attrName  = ctxAttrs.stream().filter( $ -> CTX_ATTRIBUTE_NAME.equals( $.getLocalName() ) ).findAny();
+    if( attrName.isPresent() ) {
+      result = StringFunctions.cleanup( attrName.get().getAttrValue() );
+    }
+    return result != null ? result : CTX_DEFAULT_NAME;
   }
 
   private void emitDirectiveClose( String uri, String localName, String qName ) {
@@ -338,12 +369,19 @@ public final class TranslationContext extends DefaultHandler {
     builder.appendF( "[/@%s]", name );
   }
 
+  private void ctxAttribute( XmlAttr attr ) {
+    // ignore this attribute as it's only supposed to provide a name
+    if( ! CTX_ATTRIBUTE_NAME.equals( attr.getLocalName() ) ) {
+      builder.appendF( "'%s': %s, ", attr.getLocalName(), attr.getAttrValue() );
+    }
+  }
+  
   private void fmAttribute( XmlAttr attr ) {
     if( ! FMX_NAMESPACE.equals( attr.getNsUri() ) ) {
       builder.appendF( " %s=\"%s\"", attr.getQName(), attr.getAttrValue() );
     }
   }
-
+  
   // depends
   
   private void emitDependsOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {

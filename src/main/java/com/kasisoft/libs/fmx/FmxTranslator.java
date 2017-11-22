@@ -24,26 +24,26 @@ import lombok.*;
 public class FmxTranslator {
   
   // a root element so it's made sure that multiple xml elements are embedded in a root element
-  private static final String WRAPPER = "<%s:root xmlns:%s=\"%s\" xmlns:%s=\"%s\">%%s</%s:root>";
+  private static final String WRAPPER = "<%s:root xmlns:%s=\"%s\" xmlns:%s=\"%s\" xmlns:%s=\"%s\">%%s</%s:root>";
   
   String                     nsPrefix;
-  String                     nsTPrefix;
   String                     wrapper;
   Function<String, String>   directiveProvider;
   SAXParserFactory           saxParserFactory;
   
   public FmxTranslator() {
-    this( null, null, null );
+    this( null, null, null, null );
   }
   
   public FmxTranslator( Function<String, String> directives ) {
-    this( null, null, directives );
+    this( null, null, null, directives );
   }
   
-  public FmxTranslator( String prefix, String tPrefix, Function<String, String> directives ) {
-    nsPrefix          = prefix  != null ? prefix  : FMX_PREFIX;
-    nsTPrefix         = tPrefix != null ? tPrefix : FMT_PREFIX;
-    wrapper           = String.format( WRAPPER, nsPrefix, nsPrefix, FMX_NAMESPACE, nsTPrefix, FMT_NAMESPACE, nsPrefix );
+  public FmxTranslator( String prefix, String nsTPrefix, String ctxPrefix, Function<String, String> directives ) {
+    nsPrefix          = prefix    != null ? prefix    : FMX_PREFIX;
+    nsTPrefix         = nsTPrefix != null ? nsTPrefix : FMT_PREFIX;
+    ctxPrefix         = ctxPrefix != null ? ctxPrefix : CTX_PREFIX;
+    wrapper           = String.format( WRAPPER, nsPrefix, nsPrefix, FMX_NAMESPACE, nsTPrefix, FMT_NAMESPACE, ctxPrefix, CTX_NAMESPACE, nsPrefix );
     directiveProvider = directives != null ? directives : $ -> $;
     saxParserFactory  = SAXParserFactory.newInstance();
     saxParserFactory.setNamespaceAware( true );
