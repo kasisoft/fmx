@@ -61,7 +61,7 @@
     <version-findbugs-annotations>2.0.1</version-findbugs-annotations>
     <version-freemarker>2.3.23</version-freemarker>
     <version-hamcrest>1.3</version-hamcrest>
-    <version-kcl>2.8</version-kcl>
+    <version-kcl>2.9-SNAPSHOT</version-kcl>
     <version-log4j>1.6.4</version-log4j>
     <version-lombok>1.16.18</version-lombok>
     <version-slf4j-api>1.7.5</version-slf4j-api>
