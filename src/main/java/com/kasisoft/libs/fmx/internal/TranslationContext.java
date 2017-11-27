@@ -34,6 +34,7 @@ public final class TranslationContext extends DefaultHandler {
   String                        content;
   StringFBuilder                replacer;
   StringFBuilder                builder;
+  Locator                       locator;
   
   // mapper for directive names
   Function<String, String>      directiveProvider;
@@ -62,25 +63,29 @@ public final class TranslationContext extends DefaultHandler {
   // we're rendering the inner content into the else part of the if-then-else ftl statement
   Stack<Integer>                innerWraps;
   
+  // remembering newlines in case an fmx:depends is located on a single line, so we're dropping line feeds
+  // in order to prevent ugly "disruption" of the FTL text (for instance: <i fmx:depends="x">text<i> will no
+  // longer be rendered as [#if x]\n<i>text</i>\n[/#if]). we're storing pairs of [linenumber, newline-index]
+  Stack<Integer[]>              dependsNL;
+  
   // remember the location after the last opening xml element. if the closing xml element follows immediately
   // thereafter we can generate a directly close xml element
   int                           lastOpen;
   
-  // we're generating a linefeed before closing some ftl statements, so we remember this. if characters 
-  // containing a line feed will be processed we're dropping this linefeed (this linefeed essentially gets
-  // moved)
-  Character                     consume;  
-
-  
   public TranslationContext( @Nonnull String fmxPrefix, Function<String, String> directives ) {
     lastOpen          = -1;
-    consume           = null;
     directiveProvider = directives;
     isCtxAttribute    = $_ -> CTX_NAMESPACE.equals( $_.getNsUri() );
     isFmxRelevant     = ($1, $2) -> FMX_NAMESPACE.equals( $1 ) || (($2 != null) && $2.startsWith( fmxPrefix ) );
     hasFmxAttribute   = $ -> $.parallelStream()
       .map( $_ -> isFmxRelevant.test( $_.getNsUri(), $_.getQName() ) )
       .reduce( false, ($1, $2) -> $1 || $2 );
+  }
+  
+  @Override
+  public void setDocumentLocator( Locator loc ) {
+    locator = loc;
+    super.setDocumentLocator( loc );
   }
   
   @Override
@@ -92,6 +97,7 @@ public final class TranslationContext extends DefaultHandler {
     fmxXmlOnElement   = new Stack<>();
     indentions        = new Stack<>();
     innerWraps        = new Stack<>();
+    dependsNL         = new Stack<>();
     content           = "";
   }
 
@@ -254,9 +260,6 @@ public final class TranslationContext extends DefaultHandler {
     int close = builder.length();
     
     endXmlElement( uri, localName, qName );
-    
-    builder.append( "\n" );
-    consume = '\n';
     
     String indent = indentions.pop();
     closeWrap( indent, open, close );
@@ -437,18 +440,24 @@ public final class TranslationContext extends DefaultHandler {
     boolean hasWrapExpression = fmxXmlOnElement.pop();
     if( hasWrapExpression ) {
       String innerContent = StringFunctions.trim( builder.substring( open, close ), " \t", false );
-      builder.appendF( "%s[#else]", indent );
+      builder.appendF( "\n%s[#else]", indent );
       builder.append( innerContent );
-      builder.appendF( "%s[/#if]\n", indent );
+      builder.appendF( "%s[/#if]", indent );
     }
   }
   
   private String getCurrentIndent() {
     String result = "";
-    int i = builder.length() - 1;
+    int    i      = builder.length() - 1;
     while( i >= 0 ) {
-      if( builder.charAt( i ) == '\n' ) {
+      char ch = builder.charAt(i);
+      if( ch == '\n' ) {
         result = builder.substring( i + 1, builder.length() );
+        break;
+      } else if( ! Character.isWhitespace( ch ) ) {
+        // there is some non-whitespace text after the line break,
+        // so it seems intentional which means we don't get rid of whitespace
+        result = "";
         break;
       }
       i--;
@@ -470,7 +479,7 @@ public final class TranslationContext extends DefaultHandler {
   private void closeWith( String indent ) {
     WithRecord result = withRecords.pop();
     if( result != null ) { 
-      builder.appendF( "%s[#assign %s=%s /]\n", indent, result.getModelname(), result.getVarname() );
+      builder.appendF( "\n%s[#assign %s=%s /]", indent, result.getModelname(), result.getVarname() );
     }
   }
 
@@ -484,13 +493,14 @@ public final class TranslationContext extends DefaultHandler {
   private void closeList( String indent ) {
     boolean hasListExpression = fmxXmlOnElement.pop();
     if( hasListExpression ) { 
-      builder.appendF( "%s[/#list]\n", indent );
+      builder.appendF( "\n%s[/#list]", indent );
     }
   }
 
   private void openDepends( String indent, String dependsExpression ) {
     if( dependsExpression != null ) {
       builder.appendF( "%s[#if %s]\n", indent, dependsExpression );
+      dependsNL.push( new Integer[] { locator.getLineNumber(), builder.length() - 1 } );
     }
     fmxXmlOnElement.push( dependsExpression != null );
   }
@@ -498,24 +508,20 @@ public final class TranslationContext extends DefaultHandler {
   private void closeDepends( String indent ) {
     boolean hasDependsExpression = fmxXmlOnElement.pop();
     if( hasDependsExpression ) {
-      builder.appendF( "%s[/#if]\n", indent );
+      Integer[] nl = dependsNL.pop();
+      if( nl[0].intValue() == locator.getLineNumber() ) {
+        // this fmx:depends element is located on a single line, so alter the output accordingly
+        builder.deleteCharAt( nl[1].intValue() );
+        builder.appendF( "%s[/#if]", indent );
+      } else {
+        builder.appendF( "\n%s[/#if]", indent );
+      }
     }
   }
 
   @Override
   public void characters( char ch[], int start, int length ) throws SAXException {
-    int pos = builder.length();
     builder.append( ch, start, length );
-    if( consume != null ) {
-      // remove a redundant linefeed character
-      for( int i = pos; i < pos + length; i++ ) {
-        if( builder.charAt(i) == consume.charValue() ) {
-          builder.deleteCharAt(i);
-          consume = null;
-          break;
-        }
-      }
-    }
   }
 
   @Override
