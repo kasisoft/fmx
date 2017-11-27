@@ -47,6 +47,10 @@ public class FmxTemplateLoader implements TemplateLoader {
     isFmx       = test != null ? test : IS_FMX;
   }
   
+  public void setDebug( boolean debug ) {
+    translator.setDebug( debug );
+  }
+  
   @Override
   public Object findTemplateSource( @Nonnull String name ) throws IOException {
     FmxRecord result = null;

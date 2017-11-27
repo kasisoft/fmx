@@ -12,6 +12,11 @@ the templating.
 * [GIT](https://kasisoft.com/bitbucket/projects/LIBS/repos/com.kasisoft.libs.fmx)
 
 
+# Configuration
+
+Setting the property __kasisoft.fmx.translator.debug__ to __true__ will enable logging for the translated ftl.  
+ 
+
 # Development Setup
 
 I assume that you're familiar with Maven. If not I suggest to visit the following page:
