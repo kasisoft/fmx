@@ -13,6 +13,8 @@ import javax.xml.parsers.*;
 
 import java.util.function.*;
 
+import java.util.*;
+
 import java.io.*;
 
 import lombok.extern.slf4j.*;
@@ -34,27 +36,33 @@ public class FmxTranslator {
   private static final SimpleProperty<Boolean> DEBUG = new SimpleProperty<>( "kasisoft.fmx.translator.debug", new BooleanAdapter() )
     .withDefault( false );
   
-  String                      nsPrefix;
-  String                      wrapper;
-  Function<String, String>    directiveProvider;
-  SAXParserFactory            saxParserFactory;
-  BiConsumer<String, String>  debug;
+  String                                  nsPrefix;
+  String                                  wrapper;
+  Function<String, String>                directiveProvider;
+  Map<String, Function<String, String>>   attributeMappers;
+  SAXParserFactory                        saxParserFactory;
+  BiConsumer<String, String>              debug;
   
   public FmxTranslator() {
-    this( null, null, null, null );
+    this( null, null, null, null, null );
   }
-  
+
   public FmxTranslator( Function<String, String> directives ) {
-    this( null, null, null, directives );
+    this( null, null, null, directives, null );
+  }
+
+  public FmxTranslator( Function<String, String> directives, Map<String, Function<String, String>> mappers ) {
+    this( null, null, null, directives, mappers );
   }
   
-  public FmxTranslator( String prefix, String nsTPrefix, String ctxPrefix, Function<String, String> directives ) {
+  public FmxTranslator( String prefix, String nsTPrefix, String ctxPrefix, Function<String, String> directives, Map<String, Function<String, String>> mappers ) {
     nsPrefix          = prefix    != null ? prefix    : FMX_PREFIX;
     nsTPrefix         = nsTPrefix != null ? nsTPrefix : FMT_PREFIX;
     ctxPrefix         = ctxPrefix != null ? ctxPrefix : CTX_PREFIX;
     debug             = this::debugOff;
     wrapper           = String.format( WRAPPER, nsPrefix, nsPrefix, FMX_NAMESPACE, nsTPrefix, FMT_NAMESPACE, ctxPrefix, CTX_NAMESPACE, nsPrefix );
     directiveProvider = directives != null ? directives : $ -> $;
+    attributeMappers  = mappers != null ? mappers : Collections.emptyMap();  
     saxParserFactory  = SAXParserFactory.newInstance();
     saxParserFactory.setNamespaceAware( true );
     setDebug( DEBUG.getValue() );
@@ -71,7 +79,7 @@ public class FmxTranslator {
    */
    public String convert( @Nonnull String xmlInput ) {
     try {
-      TranslationContext ctx = new TranslationContext( nsPrefix, directiveProvider );
+      TranslationContext ctx = new TranslationContext( nsPrefix, directiveProvider, attributeMappers );
       convert( xmlInput, ctx );
       String result = ctx.toString();
       debug.accept( xmlInput, result );

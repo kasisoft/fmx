@@ -8,6 +8,8 @@ import javax.annotation.*;
 
 import java.util.function.*;
 
+import java.util.*;
+
 import java.io.*;
 
 import lombok.extern.slf4j.*;
@@ -38,12 +40,12 @@ public class FmxTemplateLoader implements TemplateLoader {
   }
 
   public FmxTemplateLoader( @Nonnull TemplateLoader loader, Predicate<String> test ) {
-    this( loader, test, null );
+    this( loader, test, null, null );
   }
   
-  public FmxTemplateLoader( @Nonnull TemplateLoader loader, Predicate<String> test, Function<String, String> directives ) {
+  public FmxTemplateLoader( @Nonnull TemplateLoader loader, Predicate<String> test, Function<String, String> directives, Map<String, Function<String, String>> mappers ) {
     delegate    = loader;
-    translator  = new FmxTranslator( null, null, null, directives );
+    translator  = new FmxTranslator( null, null, null, directives, mappers );
     isFmx       = test != null ? test : IS_FMX;
   }
   

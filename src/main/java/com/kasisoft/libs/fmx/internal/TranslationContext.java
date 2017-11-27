@@ -31,51 +31,55 @@ public final class TranslationContext extends DefaultHandler {
   private static final Bucket<StringFBuilder> STRINGFBUILDER = BucketFactories.newStringFBuilderBucket();
   private static final AtomicLong             COUNTER        = new AtomicLong();
   
-  String                        content;
-  StringFBuilder                replacer;
-  StringFBuilder                builder;
-  Locator                       locator;
+  String                                        content;
+  StringFBuilder                                replacer;
+  StringFBuilder                                builder;
+  Locator                                       locator;
   
   // mapper for directive names
-  Function<String, String>      directiveProvider;
+  Function<String, String>                      directiveProvider;
+  Map<String, Function<String, String>>         attributeMappers;
   
   // test for fmx configurations (uri, prefix)
-  BiPredicate<String, String>   isFmxRelevant;
-  Predicate<List<XmlAttr>>      hasFmxAttribute;
+  BiPredicate<String, String>                   isFmxRelevant;
+  Predicate<List<XmlAttr>>                      hasFmxAttribute;
   
   // test if an attribute needs to be put into a context map
-  Predicate<XmlAttr>            isCtxAttribute;
+  Predicate<XmlAttr>                            isCtxAttribute;
+  Predicate<XmlAttr>                            isNotCtxAttribute;
   
   // a stack of flags per element: the scenario of a normal xml element which contains fmx attributes
   // requires attributes which aren't passed through endElement so we need to remember
-  Stack<Boolean>                fmxXml;
+  Stack<Boolean>                                fmxXml;
   
   // the with scenario requires to restore the previous model when done, so we need to remember the
   // temporarily used variable
-  Stack<WithRecord>             withRecords;
+  Stack<WithRecord>                             withRecords;
   
   // an xml element with fmx attributes can generate multiple statements which need to be closed in the end,
   // so we remember here which statements had been generated
-  Stack<Boolean>                fmxXmlOnElement;
-  Stack<String>                 indentions;
+  Stack<Boolean>                                fmxXmlOnElement;
+  Stack<String>                                 indentions;
 
   // this stack is used to remember the begin of the inner xml tree, so if the wrapping-condition is false
   // we're rendering the inner content into the else part of the if-then-else ftl statement
-  Stack<Integer>                innerWraps;
+  Stack<Integer>                                innerWraps;
   
   // remembering newlines in case an fmx:depends is located on a single line, so we're dropping line feeds
   // in order to prevent ugly "disruption" of the FTL text (for instance: <i fmx:depends="x">text<i> will no
   // longer be rendered as [#if x]\n<i>text</i>\n[/#if]). we're storing pairs of [linenumber, newline-index]
-  Stack<Integer[]>              dependsNL;
+  Stack<Integer[]>                              dependsNL;
 
   // remember the location after the last opening xml element. if the closing xml element follows immediately
   // thereafter we can generate a directly close xml element
-  int                           lastOpen;
+  int                                           lastOpen;
   
-  public TranslationContext( @Nonnull String fmxPrefix, Function<String, String> directives ) {
+  public TranslationContext( @Nonnull String fmxPrefix, Function<String, String> directives, Map<String, Function<String, String>> mappers ) {
     lastOpen          = -1;
     directiveProvider = directives;
+    attributeMappers  = mappers != null ? mappers : Collections.emptyMap();
     isCtxAttribute    = $_ -> CTX_NAMESPACE.equals( $_.getNsUri() );
+    isNotCtxAttribute = isCtxAttribute.negate();
     isFmxRelevant     = ($1, $2) -> FMX_NAMESPACE.equals( $1 ) || (($2 != null) && $2.startsWith( fmxPrefix ) );
     hasFmxAttribute   = $ -> $.parallelStream()
       .map( $_ -> isFmxRelevant.test( $_.getNsUri(), $_.getQName() ) )
@@ -373,10 +377,10 @@ public final class TranslationContext extends DefaultHandler {
   // directive
   
   private void emitDirectiveOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String             name     = directiveProvider.apply( localName );
-    builder.appendF( "[@%s", name );
+    String ftlName = directiveProvider.apply( localName );
+    builder.appendF( "[@%s", ftlName );
     // write down all attributes that shall be kept
-    attrs.stream().filter( isCtxAttribute.negate() ).forEach( this::fmAttribute );
+    attrs.stream().filter( isNotCtxAttribute ).forEach( $ -> fmAttribute( ftlName, $ ) );
     // generate a context map attribute if desired
     emitContextAttributes( attrs.stream().filter( isCtxAttribute ).collect( Collectors.toList() ) );
     builder.append( "]" );
@@ -416,17 +420,30 @@ public final class TranslationContext extends DefaultHandler {
     }
   }
   
-  private void fmAttribute( XmlAttr attr ) {
+  private void fmAttribute( String ftlName, XmlAttr attr ) {
     if( ! FMX_NAMESPACE.equals( attr.getNsUri() ) ) {
       String value = attr.getAttrValue();
-      if( value.startsWith("'") && value.endsWith("'") ) {
-        // passing an ordinary value
-        builder.appendF( " %s=\"%s\"", attr.getQName(), value.substring( 1, value.length() - 1 ) );
-      } else {
-        // passing an ftl expression
-        builder.appendF( " %s=%s", attr.getQName(), value );
-      }
+      // change the attribute value depending on the current directive
+      value        = getAttributeMapper( ftlName ).apply( value );
+      builder.appendF( " %s=%s", attr.getQName(), value );
     }
+  }
+  
+  @Nonnull
+  private Function<String, String> getAttributeMapper( String ftlName ) {
+    Function<String, String> result = attributeMappers.get( ftlName );
+    if( result == null ) {
+      result = this::defaultAttributeMapper;
+    }
+    return result;
+  }
+  
+  private String defaultAttributeMapper( String value ) {
+    if( value.startsWith("'") && value.endsWith("'") ) {
+      // passing an ordinary value
+      value = String.format( "\"%s\"", value.substring( 1, value.length() - 1 ) );
+    }
+    return value;
   }
   
   // depends

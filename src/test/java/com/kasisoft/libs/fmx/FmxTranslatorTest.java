@@ -7,6 +7,8 @@ import com.kasisoft.libs.common.io.*;
 
 import org.testng.annotations.*;
 
+import java.util.function.*;
+
 import java.util.stream.*;
 
 import java.util.*;
@@ -134,13 +136,22 @@ public class FmxTranslatorTest {
     // directive example using an ftl expression
     "37_directive-with-empty-literal",
 
+    // directive example using an ftl expression
+    "38_directive-with-attribute-value-mapper",
+
   } );
   
   FmxTranslator    translator;
   
   @BeforeClass
   public void setup() {
-    translator = new FmxTranslator( null, null, null, this::directiveMapper );
+    Map<String, Function<String, String>> mappers = new HashMap<>();
+    mappers.put( "axolotl.frogger", this::customMapper ); 
+    translator = new FmxTranslator( null, null, null, this::directiveMapper, mappers );
+  }
+  
+  private String customMapper( String attributeValue ) {
+    return String.format( "\"TOTO-%s-TOTO\"", attributeValue );
   }
   
   private String directiveMapper( String name ) {

@@ -36,7 +36,7 @@ public class FmxTranslatorErrorTest {
   
   @BeforeClass
   public void setup() {
-    translator = new FmxTranslator( null, null, null, $ -> "axolotl." + $ );
+    translator = new FmxTranslator( null, null, null, $ -> "axolotl." + $, null );
   }
   
   @DataProvider(name = "convertData")
