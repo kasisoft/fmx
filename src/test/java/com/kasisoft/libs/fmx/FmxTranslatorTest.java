@@ -128,6 +128,12 @@ public class FmxTranslatorTest {
     // switch with a default scenario
     "35_switch-with-default",
 
+    // directive example using an ftl expression
+    "36_directive-with-expression",
+
+    // directive example using an ftl expression
+    "37_directive-with-empty-literal",
+
   } );
   
   FmxTranslator    translator;

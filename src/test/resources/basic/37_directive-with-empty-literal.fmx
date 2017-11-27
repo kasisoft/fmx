@@ -1,4 +1,4 @@
-<fmx:fluffy arg="'c'">
+<fmx:fluffy arg="''">
   <my-element b="second" a="first">
     <inner c="third"/>
   </my-element>

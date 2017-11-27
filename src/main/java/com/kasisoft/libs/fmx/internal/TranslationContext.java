@@ -418,7 +418,14 @@ public final class TranslationContext extends DefaultHandler {
   
   private void fmAttribute( XmlAttr attr ) {
     if( ! FMX_NAMESPACE.equals( attr.getNsUri() ) ) {
-      builder.appendF( " %s=\"%s\"", attr.getQName(), attr.getAttrValue() );
+      String value = attr.getAttrValue();
+      if( value.startsWith("'") && value.endsWith("'") ) {
+        // passing an ordinary value
+        builder.appendF( " %s=\"%s\"", attr.getQName(), value.substring( 1, value.length() - 1 ) );
+      } else {
+        // passing an ftl expression
+        builder.appendF( " %s=%s", attr.getQName(), value );
+      }
     }
   }
   
