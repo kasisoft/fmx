@@ -1,0 +1,5 @@
+<fmx:list fmx:value="model.list">
+  <li>
+    <a href="${it.link!}"><i fmx:depends="it.icon?has_content" class="fa ${it.icon}"></i>${it.name!}</a>
+  </li>
+</fmx:list>

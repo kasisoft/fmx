@@ -113,6 +113,9 @@ public class FmxTranslatorTest {
     // scenario which allows to pass multiple attributes as a json map 
     "30_context-attributes",
     
+    // complex list construction
+    "31_complex-list",
+      
   } );
   
   FmxTranslator    translator;
