@@ -145,12 +145,12 @@ public class FmxTranslatorTest {
   
   @BeforeClass
   public void setup() {
-    Map<String, Function<String, String>> mappers = new HashMap<>();
+    Map<String, BiFunction<String, String, String>> mappers = new HashMap<>();
     mappers.put( "axolotl.frogger", this::customMapper ); 
     translator = new FmxTranslator( null, null, null, this::directiveMapper, mappers );
   }
   
-  private String customMapper( String attributeValue ) {
+  private String customMapper( String attrLocalName, String attributeValue ) {
     return String.format( "\"TOTO-%s-TOTO\"", attributeValue );
   }
   

@@ -36,12 +36,12 @@ public class FmxTranslator {
   private static final SimpleProperty<Boolean> DEBUG = new SimpleProperty<>( "kasisoft.fmx.translator.debug", new BooleanAdapter() )
     .withDefault( false );
   
-  String                                  nsPrefix;
-  String                                  wrapper;
-  Function<String, String>                directiveProvider;
-  Map<String, Function<String, String>>   attributeMappers;
-  SAXParserFactory                        saxParserFactory;
-  BiConsumer<String, String>              debug;
+  String                                            nsPrefix;
+  String                                            wrapper;
+  Function<String, String>                          directiveProvider;
+  Map<String, BiFunction<String, String, String>>   attributeMappers;
+  SAXParserFactory                                  saxParserFactory;
+  BiConsumer<String, String>                        debug;
   
   public FmxTranslator() {
     this( null, null, null, null, null );
@@ -51,11 +51,11 @@ public class FmxTranslator {
     this( null, null, null, directives, null );
   }
 
-  public FmxTranslator( Function<String, String> directives, Map<String, Function<String, String>> mappers ) {
+  public FmxTranslator( Function<String, String> directives, Map<String, BiFunction<String, String, String>> mappers ) {
     this( null, null, null, directives, mappers );
   }
   
-  public FmxTranslator( String prefix, String nsTPrefix, String ctxPrefix, Function<String, String> directives, Map<String, Function<String, String>> mappers ) {
+  public FmxTranslator( String prefix, String nsTPrefix, String ctxPrefix, Function<String, String> directives, Map<String, BiFunction<String, String, String>> mappers ) {
     nsPrefix          = prefix    != null ? prefix    : FMX_PREFIX;
     nsTPrefix         = nsTPrefix != null ? nsTPrefix : FMT_PREFIX;
     ctxPrefix         = ctxPrefix != null ? ctxPrefix : CTX_PREFIX;
