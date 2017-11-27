@@ -115,7 +115,19 @@ public class FmxTranslatorTest {
     
     // complex list construction
     "31_complex-list",
-      
+
+    // simple switch statement without cases/defaults
+    "32_switch-no-match",
+    
+    // switch statement with a single case
+    "33_switch-one-case",
+    
+    // switch with multiple cases
+    "34_switch-many-cases",
+
+    // switch with a default scenario
+    "35_switch-with-default",
+
   } );
   
   FmxTranslator    translator;

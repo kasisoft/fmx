@@ -67,7 +67,7 @@ public final class TranslationContext extends DefaultHandler {
   // in order to prevent ugly "disruption" of the FTL text (for instance: <i fmx:depends="x">text<i> will no
   // longer be rendered as [#if x]\n<i>text</i>\n[/#if]). we're storing pairs of [linenumber, newline-index]
   Stack<Integer[]>              dependsNL;
-  
+
   // remember the location after the last opening xml element. if the closing xml element follows immediately
   // thereafter we can generate a directly close xml element
   int                           lastOpen;
@@ -199,27 +199,33 @@ public final class TranslationContext extends DefaultHandler {
   private void startFmxElement( String uri, String localName, String qName, List<XmlAttr> attrs ) {
     FmxElementType type = FmxElementType.valueByName( localName, FmxElementType.directive );
     switch( type ) {
-    case directive  : emitDirectiveOpen( uri, localName, qName, attrs ); break;
-    case doctype    : emitDoctypeOpen  ( uri, localName, qName, attrs ); break;
-    case include    : emitIncludeOpen  ( uri, localName, qName, attrs ); break;
-    case importDecl : emitImportOpen   ( uri, localName, qName, attrs ); break;
-    case list       : emitListOpen     ( uri, localName, qName, attrs ); break;
-    case depends    : emitDependsOpen  ( uri, localName, qName, attrs ); break;
-    case with       : emitWithOpen     ( uri, localName, qName, attrs ); break;
-    case escape     : emitEscapeOpen   ( uri, localName, qName, attrs ); break;
-    case compress   : emitCompressOpen ( uri, localName, qName, attrs ); break;
+    case directive    : emitDirectiveOpen( uri, localName, qName, attrs ); break;
+    case doctype      : emitDoctypeOpen  ( uri, localName, qName, attrs ); break;
+    case include      : emitIncludeOpen  ( uri, localName, qName, attrs ); break;
+    case importDecl   : emitImportOpen   ( uri, localName, qName, attrs ); break;
+    case list         : emitListOpen     ( uri, localName, qName, attrs ); break;
+    case depends      : emitDependsOpen  ( uri, localName, qName, attrs ); break;
+    case with         : emitWithOpen     ( uri, localName, qName, attrs ); break;
+    case escape       : emitEscapeOpen   ( uri, localName, qName, attrs ); break;
+    case compress     : emitCompressOpen ( uri, localName, qName, attrs ); break;
+    case select       : emitSelectOpen   ( uri, localName, qName, attrs ); break;
+    case option       : emitOptionOpen   ( uri, localName, qName, attrs ); break;
+    case defaultcase  : emitDefaultOpen  ( uri, localName, qName, attrs ); break;
     }
   }
   
   private void endFmxElement( String uri, String localName, String qName ) {
     FmxElementType type = FmxElementType.valueByName( localName, FmxElementType.directive );
     switch( type ) {
-    case directive  : emitDirectiveClose ( uri, localName, qName ); break;
-    case list       : emitListClose      ( uri, localName, qName ); break;
-    case depends    : emitDependsClose   ( uri, localName, qName ); break;
-    case with       : emitWithClose      ( uri, localName, qName ); break;
-    case escape     : emitEscapeClose    ( uri, localName, qName ); break;
-    case compress   : emitCompressClose  ( uri, localName, qName ); break;
+    case directive    : emitDirectiveClose ( uri, localName, qName ); break;
+    case list         : emitListClose      ( uri, localName, qName ); break;
+    case depends      : emitDependsClose   ( uri, localName, qName ); break;
+    case with         : emitWithClose      ( uri, localName, qName ); break;
+    case escape       : emitEscapeClose    ( uri, localName, qName ); break;
+    case compress     : emitCompressClose  ( uri, localName, qName ); break;
+    case select       : emitSelectClose    ( uri, localName, qName ); break;
+    case option       : emitOptionClose    ( uri, localName, qName ); break;
+    case defaultcase  : emitDefaultClose   ( uri, localName, qName ); break;
     }
   }
   
@@ -294,6 +300,37 @@ public final class TranslationContext extends DefaultHandler {
     }
   }
   
+  // select (switch)
+  
+  private void emitSelectOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
+    String value = FmxAttr.value.getValue( attrs );
+    builder.appendF( "[#switch %s]", value );
+  }
+
+  private void emitSelectClose( String uri, String localName, String qName ) {
+    builder.append( "[/#switch]" );
+  }
+  
+  // option (case)
+  
+  private void emitOptionOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
+    String expected = FmxAttr.value.getValue( attrs );
+    builder.appendF( "[#case %s]", expected );
+  }
+
+  private void emitOptionClose( String uri, String localName, String qName ) {
+    builder.append( "[#break]" );
+  }
+
+  // defaultcase (default)
+  
+  private void emitDefaultOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
+    builder.append( "[#default]" );
+  }
+
+  private void emitDefaultClose( String uri, String localName, String qName ) {
+  }
+
   // compress
   
   private void emitCompressOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {

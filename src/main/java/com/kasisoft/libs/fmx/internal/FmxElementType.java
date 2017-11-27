@@ -43,7 +43,13 @@ public enum FmxElementType {
   compress( "compress" ),
   
   // pseudo element used to wrap the content
-  root( "root" );
+  root( "root" ),
+  
+  select( "switch" ),
+  
+  option( "case" ),
+  
+  defaultcase( "default" );
   
   String   literal;
   

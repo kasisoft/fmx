@@ -1,0 +1,11 @@
+<fmx:switch fmx:value="model.type">
+  <fmx:case fmx:value="model.t">
+    <p>NO CASE</p>
+  </fmx:case>
+  <fmx:case fmx:value="'myliteral'">
+    <p>LITERAL</p>
+  </fmx:case>
+  <fmx:default>
+    <p>DEFAULT</p>
+  </fmx:default>
+</fmx:switch>

@@ -1,0 +1,3 @@
+<fmx:switch fmx:value="model.type">
+  <p>NO CASE</p>
+</fmx:switch>
