@@ -215,6 +215,8 @@ public final class TranslationContext extends DefaultHandler {
     case select       : emitSelectOpen   ( uri, localName, qName, attrs ); break;
     case option       : emitOptionOpen   ( uri, localName, qName, attrs ); break;
     case defaultcase  : emitDefaultOpen  ( uri, localName, qName, attrs ); break;
+    case macro        : emitMacroOpen    ( uri, localName, qName, attrs ); break;
+    case nested       : emitNestedOpen   ( uri, localName, qName, attrs ); break;
     }
   }
   
@@ -230,6 +232,8 @@ public final class TranslationContext extends DefaultHandler {
     case select       : emitSelectClose    ( uri, localName, qName ); break;
     case option       : emitOptionClose    ( uri, localName, qName ); break;
     case defaultcase  : emitDefaultClose   ( uri, localName, qName ); break;
+    case macro        : emitMacroClose     ( uri, localName, qName ); break;
+    case nested       : emitNestedClose    ( uri, localName, qName ); break;
     }
   }
   
@@ -324,6 +328,31 @@ public final class TranslationContext extends DefaultHandler {
 
   private void emitOptionClose( String uri, String localName, String qName ) {
     builder.append( "[#break]" );
+  }
+
+  // macro
+  private void emitMacroOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
+    String name = FmxAttr.name.getRequiredValue( attrs, error_macro_without_name );
+    builder.appendF( "[#macro %s", name );
+    Predicate<XmlAttr> isFmxAttr    = $ -> isFmxRelevant.test( $.getNsUri(), $.getQName() );
+    Predicate<XmlAttr> isNoFmxAttr  = isFmxAttr.negate();
+    attrs.stream()
+      .filter( isNoFmxAttr )
+      .map( XmlAttr::getLocalName )
+      .forEach( $ -> builder.appendF( " %s", $ ) );
+    builder.append( "]" );
+  }
+
+  private void emitMacroClose( String uri, String localName, String qName ) {
+    builder.appendF( "[/#macro]" );
+  }
+
+  // macro
+  private void emitNestedOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
+    builder.append( "[#nested]" );
+  }
+
+  private void emitNestedClose( String uri, String localName, String qName ) {
   }
 
   // defaultcase (default)

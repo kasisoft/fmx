@@ -1,0 +1,5 @@
+<fmx:macro fmx:name="todo" a="" b="'c'">
+  <p>BEGIN</p>
+  <fmx:nested/>
+  <p>END</p>
+</fmx:macro>

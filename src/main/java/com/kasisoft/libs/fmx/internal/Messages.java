@@ -30,7 +30,10 @@ public class Messages {
   
   @I18N("The 'fmx:escape' elements must provide an attribute 'fmx:name'.")
   public static String    error_escape_without_name;
-  
+
+  @I18N("The 'fmx:macro' elements must provide an attribute 'fmx:name'.")
+  public static String    error_macro_without_name;
+
   @I18N("Missing 'fmx:model' attribute for 'fmx:with' element !")
   public static String    missing_fmx_model;
 

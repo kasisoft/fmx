@@ -49,7 +49,11 @@ public enum FmxElementType {
   
   option( "case" ),
   
-  defaultcase( "default" );
+  defaultcase( "default" ),
+  
+  macro( "macro" ),
+  
+  nested( "nested" );
   
   String   literal;
   

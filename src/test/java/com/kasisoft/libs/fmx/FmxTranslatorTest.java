@@ -139,6 +139,9 @@ public class FmxTranslatorTest {
     // directive example using an ftl expression
     "38_directive-with-attribute-value-mapper",
 
+    // example for a macro declaration
+    "39_macro",
+
   } );
   
   FmxTranslator    translator;
