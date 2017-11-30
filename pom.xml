@@ -12,7 +12,7 @@
   <packaging>jar</packaging>
   
   <artifactId>com.kasisoft.libs.fmx</artifactId>
-  <version>0.3</version>
+  <version>0.4-SNAPSHOT</version>
 
   <name>FMX :: Kasisoft Freemarker Extension</name>
   <url>https://kasisoft.com/bitbucket/projects/LIBS/repos/com.kasisoft.libs.fmx</url>
