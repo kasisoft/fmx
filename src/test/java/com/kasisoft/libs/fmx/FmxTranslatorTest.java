@@ -142,6 +142,9 @@ public class FmxTranslatorTest {
     // example for a macro declaration
     "39_macro",
 
+      // including a macro
+      "40_include-ftl",
+      
   } );
   
   FmxTranslator    translator;
