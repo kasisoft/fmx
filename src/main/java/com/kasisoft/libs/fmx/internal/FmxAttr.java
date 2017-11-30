@@ -83,6 +83,14 @@ public enum FmxAttr {
     return result;
   }
   
+  public static FmxAttr valueByXmlAttr( @Nonnull XmlAttr attr ) {
+    FmxAttr result = null;
+    if( FMX_NAMESPACE.equals( attr.getNsUri() ) ) {
+      result = LocalData.map.get( attr.getLocalName() );
+    }
+    return result;
+  }
+  
   private static class LocalData {
     
     static final Map<String, FmxAttr> map = new HashMap<>();
