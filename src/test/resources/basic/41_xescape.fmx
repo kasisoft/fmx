@@ -1,0 +1,6 @@
+<fmx:xescape>
+  <myxml document="true">
+    <fluffy a="b"></fluffy>
+    <dodo fmx:depends="bronco?has_content">ABC</dodo>
+  </myxml>
+</fmx:xescape>

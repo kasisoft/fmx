@@ -142,9 +142,15 @@ public class FmxTranslatorTest {
     // example for a macro declaration
     "39_macro",
 
-      // including a macro
-      "40_include-ftl",
+    // including a macro
+    "40_include-ftl",
       
+    // escaping of xml
+    "41_xescape",
+
+    // escaping of xml
+    "42_xescape-by-attr",
+
   } );
   
   FmxTranslator    translator;

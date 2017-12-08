@@ -30,7 +30,8 @@ public enum FmxAttr {
   path      ( "path"    ),
   with      ( "with"    ),
   wrap      ( "wrap"    ),
-  value     ( "value"   );
+  value     ( "value"   ),
+  xescape   ( "xescape" );
 
   String   literal;
   

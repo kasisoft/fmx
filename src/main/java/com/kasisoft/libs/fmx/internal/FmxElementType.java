@@ -53,7 +53,9 @@ public enum FmxElementType {
   
   macro( "macro" ),
   
-  nested( "nested" );
+  nested( "nested" ),
+  
+  xescape( "xescape" );
   
   String   literal;
   

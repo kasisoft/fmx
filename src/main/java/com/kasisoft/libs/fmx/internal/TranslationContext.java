@@ -74,8 +74,11 @@ public final class TranslationContext extends DefaultHandler {
   // thereafter we can generate a directly close xml element
   int                                               lastOpen;
   
+  // xml escaping
+  int                                               xescape;
+  Stack<Boolean>                                    xescapes;
+  
   public TranslationContext( @Nonnull String fmxPrefix, Function<String, String> directives, Map<String, BiFunction<String, String, String>> mappers ) {
-    lastOpen          = -1;
     directiveProvider = directives;
     attributeMappers  = mappers != null ? mappers : Collections.emptyMap();
     isCtxAttribute    = $_ -> CTX_NAMESPACE.equals( $_.getNsUri() );
@@ -102,7 +105,10 @@ public final class TranslationContext extends DefaultHandler {
     indentions        = new Stack<>();
     innerWraps        = new Stack<>();
     dependsNL         = new Stack<>();
+    xescapes          = new Stack<>();
     content           = "";
+    xescape           = 0;
+    lastOpen          = -1;
   }
 
   @Override
@@ -217,6 +223,7 @@ public final class TranslationContext extends DefaultHandler {
     case defaultcase  : emitDefaultOpen  ( uri, localName, qName, attrs ); break;
     case macro        : emitMacroOpen    ( uri, localName, qName, attrs ); break;
     case nested       : emitNestedOpen   ( uri, localName, qName, attrs ); break;
+    case xescape      : emitXescapeOpen  ( uri, localName, qName, attrs ); break;
     }
   }
   
@@ -234,6 +241,7 @@ public final class TranslationContext extends DefaultHandler {
     case defaultcase  : emitDefaultClose   ( uri, localName, qName ); break;
     case macro        : emitMacroClose     ( uri, localName, qName ); break;
     case nested       : emitNestedClose    ( uri, localName, qName ); break;
+    case xescape      : emitXescapeClose   ( uri, localName, qName ); break;
     }
   }
   
@@ -245,6 +253,7 @@ public final class TranslationContext extends DefaultHandler {
     String withExpression     = FmxAttr . with    . getValue( attrs );
     String withName           = FmxAttr . name    . getValue( attrs, "model" );
     String wrapExpression     = FmxAttr . wrap    . getValue( attrs );
+    String xescapeExpression  = FmxAttr . xescape . getValue( attrs );
     
     String indent = getCurrentIndent();
     if( indent.length() > 0 ) {
@@ -257,6 +266,13 @@ public final class TranslationContext extends DefaultHandler {
     openWith( indent, withExpression, withName );
     openList( indent, listExpression, iteratorName );
     openWrap( indent, wrapExpression );
+    
+    if( xescapeExpression != null ) {
+      xescape++;
+      xescapes.push( true );
+    } else {
+      xescapes.push( false );
+    }
     
     // add the previously removed indention AFTER the ftl conditions have been rendered
     builder.append( indent );
@@ -275,6 +291,11 @@ public final class TranslationContext extends DefaultHandler {
     
     endXmlElement( uri, localName, qName );
     
+    boolean isxescape = xescapes.pop();
+    if( isxescape ) {
+      xescape--;
+    }
+    
     String indent = indentions.pop();
     closeWrap( indent, open, close );
     closeList( indent );
@@ -289,23 +310,40 @@ public final class TranslationContext extends DefaultHandler {
     if( colon > 0 ) {
       prefix = qName.substring( 0, colon );
     }
-    builder.appendF( "<%s", qName );
+    builder.appendF( "%s%s", xlt(), qName );
     attrs.forEach( this::xmlAttribute );
     if( prefix != null ) {
       xmlAttribute( new XmlAttr( null, String.format( "xmlns:%s", prefix ), uri ) );
     }
-    builder.append( ">" );
+    builder.append( xgt() );
     lastOpen = builder.length();
   }
   
   private void endXmlElement( String uri, String localName, String qName ) {
     if( builder.length() == lastOpen ) {
       // get rid of '>' and replace it with a directly closing '/>'
-      builder.setLength( builder.length() - 1 );
-      builder.append( "/>" );
+      builder.setLength( builder.length() - xgt().length() );
+      builder.appendF( "/%s", xgt() );
     } else {
-      builder.appendF( "</%s>", qName );
+      builder.appendF( "%s/%s%s", xlt(), qName, xgt() );
     }
+  }
+  
+  private String xlt() {
+    return xescape > 0 ? "&lt;" : "<";
+  }
+  
+  private String xgt() {
+    return xescape > 0 ? "&gt;" : ">";
+  }
+  
+  // xescape
+  private void emitXescapeOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
+    xescape++;
+  }
+
+  private void emitXescapeClose( String uri, String localName, String qName ) {
+    xescape--;
   }
   
   // select (switch)
