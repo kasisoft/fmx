@@ -16,12 +16,12 @@ public class FmxException extends RuntimeException {
   }
 
   /**
-   * This function makes sure that an exception is always wrapped as a {@link FailureException} without
+   * This function makes sure that an exception is always wrapped as a failure exception without
    * unnecessary wrappings.
    * 
    * @param ex   The exception that might need to be wrapped. Not <code>null</code>.
    * 
-   * @return   A FailureException instance. Not <code>null</code>.
+   * @return   A failure exception instance. Not <code>null</code>.
    */
   public static FmxException wrap( @NonNull Exception ex ) {
     if( ex instanceof FmxException ) {

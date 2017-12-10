@@ -75,7 +75,7 @@ public class FmxTranslator {
    * 
    * @return   The fmx ftl code.
    * 
-   * @throws   FmxException
+   * @throws   FmxException   In case of an error.
    */
    public String convert( @Nonnull String xmlInput ) {
     try {

@@ -70,6 +70,7 @@
     
     <!-- versioning: plugins -->
     <plugin-version-jacoco>0.7.9</plugin-version-jacoco>
+    <plugin-version-javadoc>3.0.0</plugin-version-javadoc>
     
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     
@@ -168,6 +169,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${plugin-version-javadoc}</version>
         <executions>
           <execution>
             <id>attach-javadocs</id>
