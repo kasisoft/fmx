@@ -16,7 +16,7 @@
   <version>0.5-SNAPSHOT</version>
 
   <name>FMX :: Kasisoft Freemarker Extension</name>
-  <url>https://kasisoft.com/bitbucket/projects/LIBS/repos/com.kasisoft.libs.fmx</url>
+  <!-- url>https://kasisoft.com/bitbucket/projects/LIBS/repos/com.kasisoft.libs.fmx</url -->
   <description>Freemarker extension to handle XML based templates.</description>
   
   <licenses>
@@ -32,21 +32,25 @@
   </organization>
   
   <scm>
-    <url>https://kasisoft.com/bitbucket/projects/LIBS/repos/com.kasisoft.libs.fmx</url>
-    <connection>scm:git:ssh://kasisoft.com:7999/libs/com.kasisoft.libs.fmx.git</connection>
-    <developerConnection>scm:git:ssh://kasisoft.com:7999/libs/com.kasisoft.libs.fmx.git</developerConnection>
+    <url>https://bitbucket.kasisoft.com/projects/LIBS/repos/com.kasisoft.libs.fmx</url>
+    <connection>scm:git:https://bitbucket.kasisoft.com/scm/libs/com.kasisoft.libs.fmx.git</connection>
+    <developerConnection>scm:git:https://bitbucket.kasisoft.com/scm/libs/com.kasisoft.libs.fmx.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
   
+  <!-- 
   <issueManagement>
     <system>jira</system>
     <url>https://kasisoft.com/jira/browse/FMX</url>
   </issueManagement>
-  
+  -->
+
+  <!-- 
   <ciManagement>
     <system>Jenkins</system>
     <url>https://kasisoft.com/jenkins/job/libs.com.kasisoft.libs.fmx/</url>
   </ciManagement>
+  -->  
   
   <developers>
     <developer>
@@ -250,24 +254,13 @@
       <id>sonatype-nexus-staging</id>
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
+    <!-- 
     <snapshotRepository>
       <id>libs-kasisoft</id>
       <name>libs-kasisoft</name>
       <url>https://kasisoft.com/artifactory/libs-kasisoft</url>
     </snapshotRepository>
+    -->
   </distributionManagement>
-  
-  <repositories>
-    <repository>
-      <id>libs-kasisoft</id>
-      <url>https://kasisoft.com/artifactory/libs-kasisoft</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  
+
 </project>
