@@ -48,7 +48,7 @@ Snapshots can be used while accessing a dedicated maven repository. Your POM nee
      
      <repositories>
          <repository>
-             <id>github-kcl</id>
+             <id>github-fmx</id>
              <url>https://maven.pkg.github.com/kasisoft/fmx</url>
              <releases>
                  <enabled>false</enabled>
@@ -62,7 +62,7 @@ Snapshots can be used while accessing a dedicated maven repository. Your POM nee
 You need to provide credentials in your _~/.m2/settings.xml_:
 
      <server>
-         <id>github-kcl</id>
+         <id>github-fmx</id>
          <username>username</username>
          <password>token</password>
      </server>
