@@ -1,3 +1,5 @@
+![FMX](https://github.com/kasisoft/fmx/workflows/FMX/badge.svg?branch=master&event=push)
+
 # Purpose
 
 This library provides an extension to [Freemarker](http://freemarker.org) which allows to use an XML based format for
@@ -6,27 +8,21 @@ the templating.
 
 # Infos
 
-* [eMail: daniel.kasmeroglu@kasisoft.net](mailto:daniel.kasmeroglu@kasisoft.net)
-* [Jira](https://kasisoft.com/jira/projects/FMX)
-* [Jenkins](https://kasisoft.com/jenkins/job/libs.com.kasisoft.libs.fmx)
-* [GIT](https://kasisoft.com/bitbucket/projects/LIBS/repos/com.kasisoft.libs.fmx)
+* [daniel.kasmeroglu@kasisoft.com](mailto:daniel.kasmeroglu@kasisoft.com)
+* [Github](https://github.com/kasisoft/fmx/issues)
+* [GIT](https://github.com/kasisoft/fmx.git)
 
-
-# Configuration
-
-Setting the property __kasisoft.fmx.translator.debug__ to __true__ will enable logging for the translated ftl.  
- 
 
 # Development Setup
 
-I assume that you're familiar with Maven. If not I suggest to visit the following page:
+The build uses Gradke
 
-* https://maven.apache.org/
+* [https://gradle.org/](https://gradle.org/)
 
 
 ## Requirements
 
-* Java 8
+* Java 14
 
 
 ## Maven
@@ -52,24 +48,39 @@ Snapshots can be used while accessing a dedicated maven repository. Your POM nee
      
      <repositories>
          <repository>
-             <id>libs-kasisoft</id>
-             <url>https://kasisoft.com/artifactory/libs-kasisoft</url>
+             <id>github-kcl</id>
+             <url>https://maven.pkg.github.com/kasisoft/fmx</url>
              <releases>
-                 <enabled>true</enabled>
+                 <enabled>false</enabled>
              </releases>
              <snapshots>
                  <enabled>true</enabled>
              </snapshots>
          </repository>
      </repositories>
-     
-     
+
+You need to provide credentials in your _~/.m2/settings.xml_:
+
+     <server>
+         <id>github-kcl</id>
+         <username>username</username>
+         <password>token</password>
+     </server>
+
+You can create a token with your github account:
+
+* Open your Github settings
+* Select _Developer settings_
+* Select _Personal access tokens_
+* Create a new token with read:package access
+
+
 
 # License
 
 MIT License
 
-Copyright (c) 2017 Daniel Kasmeroglu (Kasisoft)
+Copyright (c) 2020 Daniel Kasmeroglu (Kasisoft)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

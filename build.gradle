@@ -1,0 +1,181 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'jacoco'
+    id 'io.freefair.lombok' version '5.1.0'
+    id 'signing'
+    id 'io.codearte.nexus-staging' version '0.21.2'
+}
+
+group = 'com.kasisoft'
+description = 'FMX :: Kasisoft Freemarker Extension'
+version = '0.6-SNAPSHOT'
+def isSnapshot = version.endsWith('-SNAPSHOT')
+def isRelease = !isSnapshot;
+buildDir = 'target'
+sourceCompatibility = '14'
+compileJava.options.fork = true
+
+if (isRelease) {
+    def pw = findProperty('signing.password')
+    if ((pw == null) || (pw.length() == 0)) {
+        throw new GradleException('Signing for a release requires as password (signing.password)')
+    }
+    def keyId = findProperty('signing.keyId')
+    if ((keyId == null) || (keyId.length() == 0)) {
+        throw new GradleException('Signing for a release requires as keyId (signing.keyId)')
+    }
+    def ringFile = findProperty('signing.secretKeyRingFile')
+    if ((ringFile == null) || (ringFile.length() == 0)) {
+        throw new GradleException('Signing for a release requires as key ring file (signing.secretKeyRingFile; binary version)')
+    }
+}
+
+compileJava {
+  /* add these modules for testing */
+  doFirst {
+    options.compilerArgs = [
+        '--module-path', classpath.asPath,
+        '--add-modules', 'freemarker,com.kasisoft.libs.common,org.apache.logging.log4j,java.xml,java.validation,lombok'
+    ]
+    classpath = files()
+  }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation 'org.freemarker:freemarker:2.3.23'
+    implementation 'com.kasisoft:com.kasisoft.libs.common:4.1'
+    implementation 'org.apache.logging.log4j:log4j-api:2.13.3'
+    testImplementation 'com.h2database:h2:1.4.192'
+    testImplementation 'org.apache.logging.log4j:log4j-core:2.13.3'
+    testImplementation 'org.hamcrest:hamcrest-all:1.3'
+    testImplementation 'org.testng:testng:7.0.0'
+    testImplementation 'jakarta.validation:jakarta.validation-api:2.0.2'
+
+    compileOnly 'jakarta.validation:jakarta.validation-api:2.0.2'
+
+}
+
+configurations.all {
+
+    resolutionStrategy {
+
+        failOnVersionConflict()
+
+        preferProjectModules()
+
+    }
+
+}
+
+lombok {
+  version = '1.18.12'
+}
+
+jacoco {
+    toolVersion = '0.8.5'
+    reportsDir = file("$buildDir/customJacocoReportDir")
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+// https://docs.gradle.org/current/samples/sample_java_modules_multi_project.html [03-JUL-2020]
+plugins.withType(JavaPlugin).configureEach {
+    java {
+        modularity.inferModulePath = true
+    }
+}
+
+publishing {
+
+    publications {
+        maven(MavenPublication) {
+            from(components.java)
+        }
+    }
+
+    repositories {
+
+        maven {
+            name = 'GitHubPackages'
+            url = 'https://maven.pkg.github.com/kasisoft/fmx'
+            credentials {
+                username = System.getenv('GITHUB_ACTOR')
+                password = System.getenv('GITHUB_TOKEN')
+            }
+        }
+
+    }
+
+}
+
+generatePomFileForMavenPublication {
+
+    pom.name = 'FMX :: Kasisoft Freemarker Extension'
+    pom.description = 'Freemarker extension to handle XML based templates.'
+    pom.url = 'https://kasisoft.github.io/fmx/'
+
+    pom.organization({
+        name = 'Kasisoft'
+        url = 'https://kasisoft.com'
+    })
+
+    pom.license({
+        name = 'MIT License'
+        url = 'https://choosealicense.com/licenses/mit'
+    })
+
+    pom.developer({
+        id = 'costamojan'
+        name = 'Daniel Kasmeroglu'
+        email = 'daniel.kasmeroglu@kasisoft.com'
+    })
+
+    pom.scm({
+        connection = 'scm:git:https://github.com/kasisoft/fmx.git'
+        developerConnection = 'scm:git:https://github.com/kasisoft/fmx.git'
+        url = 'https://kasisoft.github.io/fmx'
+    })
+
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Javadoc).all { enabled = false }
+
+
+javadoc.options {
+    addStringOption('-release', '14')
+    addStringOption('Xdoclint:none', '-quiet')
+}
+
+test {
+    useTestNG()
+    jvmArgs(['-Duser.country=DE', '-Duser.language=de'])
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
+
+signing {
+    required { isRelease }
+    sign publishing.publications.maven
+}
