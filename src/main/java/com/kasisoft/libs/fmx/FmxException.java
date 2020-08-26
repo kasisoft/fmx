@@ -1,33 +1,36 @@
 package com.kasisoft.libs.fmx;
 
-import lombok.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
- * @author daniel.kasmeroglu@kasisoft.net
+ * @author daniel.kasmeroglu@kasisoft.com
  */
 public class FmxException extends RuntimeException {
 
-  public FmxException( String message ) {
-    super( message );
+  private static final long serialVersionUID = 5823803589908794485L;
+
+  public FmxException(@NotBlank String message) {
+    super(message);
   }
 
-  private FmxException( Throwable cause ) {
-    super( cause );
+  private FmxException(@NotNull Throwable cause) {
+    super(cause);
   }
 
   /**
    * This function makes sure that an exception is always wrapped as a failure exception without
    * unnecessary wrappings.
    * 
-   * @param ex   The exception that might need to be wrapped. Not <code>null</code>.
+   * @param ex   The exception that might need to be wrapped.
    * 
-   * @return   A failure exception instance. Not <code>null</code>.
+   * @return   A failure exception instance.
    */
-  public static FmxException wrap( @NonNull Exception ex ) {
-    if( ex instanceof FmxException ) {
+  public static @NotNull FmxException wrap(@NotNull Exception ex) {
+    if (ex instanceof FmxException) {
       return (FmxException) ex;
     } else {
-      return new FmxException( ex );
+      return new FmxException(ex);
     }
   }
 

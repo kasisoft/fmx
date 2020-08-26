@@ -1,9 +1,10 @@
 package com.kasisoft.libs.fmx.internal;
 
-import com.kasisoft.libs.common.i18n.*;
+import com.kasisoft.libs.common.i18n.I18N;
+import com.kasisoft.libs.common.i18n.I18NSupport;
 
 /**
- * @author daniel.kasmeroglu@kasisoft.net
+ * @author daniel.kasmeroglu@kasisoft.com
  */
 public class Messages {
 
@@ -41,7 +42,7 @@ public class Messages {
   public static String    error_no_root_element;
 
   static {
-    I18NSupport.initialize( Messages.class );
+    I18NSupport.initialize(Messages.class);
   }
 
 } /* ENDCLASS */

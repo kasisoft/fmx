@@ -1,29 +1,34 @@
 package com.kasisoft.libs.fmx;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-import com.kasisoft.libs.common.io.*;
+import com.kasisoft.libs.common.io.IoFunctions;
 
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
-import java.util.function.*;
+import java.util.function.BiFunction;
 
-import java.util.stream.*;
+import java.util.stream.Collectors;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import lombok.experimental.*;
+import lombok.experimental.FieldDefaults;
 
-import lombok.*;
+import lombok.AccessLevel;
 
 /**
- * @author daniel.kasmeroglu@kasisoft.net
+ * @author daniel.kasmeroglu@kasisoft.com
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FmxTranslatorTest {
 
-  private static List<String> TESTCASES = Arrays.asList( new String[] {
+  private static List<String> TESTCASES = Arrays.asList(new String[] {
       
     // plain xml with no extras must be rendered as is
     "01_unchanged",
@@ -151,24 +156,24 @@ public class FmxTranslatorTest {
     // escaping of xml
     "42_xescape-by-attr",
 
-  } );
+  });
   
   FmxTranslator    translator;
   
   @BeforeClass
   public void setup() {
     Map<String, BiFunction<String, String, String>> mappers = new HashMap<>();
-    mappers.put( "axolotl.frogger", this::customMapper ); 
-    translator = new FmxTranslator( null, null, null, this::directiveMapper, mappers );
+    mappers.put("axolotl.frogger", this::customMapper); 
+    translator = new FmxTranslator(null, null, null, this::directiveMapper, mappers);
   }
   
-  private String customMapper( String attrLocalName, String attributeValue ) {
-    return String.format( "\"TOTO-%s-TOTO\"", attributeValue );
+  private String customMapper(String attrLocalName, String attributeValue) {
+    return String.format("\"TOTO-%s-TOTO\"", attributeValue);
   }
   
-  private String directiveMapper( String name ) {
-    if( "cms-component".equals( name ) ) {
-      return name.replace( '-', '.' );
+  private String directiveMapper(String name) {
+    if ("cms-component".equals(name)) {
+      return name.replace('-', '.');
     } else {
       return "axolotl." + name;
     }
@@ -177,24 +182,24 @@ public class FmxTranslatorTest {
   @DataProvider(name = "convertData")
   public Object[][] convertData() {
     ClassLoader    cl   = Thread.currentThread().getContextClassLoader();
-    List<Object[]> list = TESTCASES.stream().map( $ -> createRecord( cl, $ ) ).collect( Collectors.toList() );
-    return list.toArray( new Object[ list.size() ][2] );
+    List<Object[]> list = TESTCASES.stream().map($ -> createRecord(cl, $)).collect(Collectors.toList());
+    return list.toArray(new Object[list.size()][2]);
   }
   
-  private Object[] createRecord( ClassLoader cl, String testcase ) {
-    String fmx = loadText( cl, String.format( "basic/%s.fmx", testcase ) );
-    String ftl = loadText( cl, String.format( "basic/%s.ftl", testcase ) ); 
-    return new Object[] { testcase, fmx, ftl };
+  private Object[] createRecord(ClassLoader cl, String testcase) {
+    String fmx = loadText(cl, String.format("basic/%s.fmx", testcase));
+    String ftl = loadText(cl, String.format("basic/%s.ftl", testcase)); 
+    return new Object[] {testcase, fmx, ftl};
   }
   
-  private String loadText( ClassLoader cl, String resource ) {
-    return IoFunctions.readTextFully( cl.getResource( resource ) );
+  private String loadText(ClassLoader cl, String resource) {
+    return IoFunctions.readText(cl.getResource(resource));
   }
 
   @Test(dataProvider = "convertData")
-  public void convert( String testcase, String fmxContent, String ftlContent ) {
-    String converted  = translator.convert( fmxContent );
-    assertThat( converted, is( ftlContent ) );
+  public void convert(String testcase, String fmxContent, String ftlContent) {
+    String converted  = translator.convert(fmxContent);
+    assertThat(converted, is(ftlContent));
   }
 
 } /* ENDCLASS */

@@ -1,72 +1,74 @@
 package com.kasisoft.libs.fmx.internal;
 
-import javax.annotation.*;
+import javax.validation.constraints.NotBlank;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
-import lombok.experimental.*;
+import lombok.experimental.FieldDefaults;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
 
 /**
- * @author daniel.kasmeroglu@kasisoft.net
+ * @author daniel.kasmeroglu@kasisoft.com
  */
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public enum FmxElementType {
 
   // generate a doctype element
-  doctype( "doctype" ),
+  doctype("doctype"),
   
   // include the mentioned content
-  include( "include" ),
+  include("include"),
   
   // import the mentioned content
-  importDecl( "import" ),
+  importDecl("import"),
   
   // repeat the content multiple times
-  list( "list" ),
+  list("list"),
   
   // emit the content only when a certain condition is met
-  depends( "depends" ),
+  depends("depends"),
   
   // setup a variable with a certain name for the inner portion
-  with( "with" ),
+  with("with"),
   
   // represent a directive
-  directive( "directive" ),
+  directive("directive"),
   
   // escape block
-  escape( "escape" ),
+  escape("escape"),
   
   // compress block
-  compress( "compress" ),
+  compress("compress"),
   
   // pseudo element used to wrap the content
-  root( "root" ),
+  root("root"),
   
-  select( "switch" ),
+  select("switch"),
   
-  option( "case" ),
+  option("case"),
   
-  defaultcase( "default" ),
+  defaultcase("default"),
   
-  macro( "macro" ),
+  macro("macro"),
   
-  nested( "nested" ),
+  nested("nested"),
   
-  xescape( "xescape" );
+  xescape("xescape");
   
   String   literal;
   
-  FmxElementType( String lit ) {
+  FmxElementType(String lit) {
     literal = lit;
-    LocalData.map.put( literal, this );
+    LocalData.map.put(literal, this);
   }
   
-  public static FmxElementType valueByName( @Nonnull String name, FmxElementType defaultValue ) {
-    FmxElementType result = LocalData.map.get( name );
-    if( result == null ) {
+  public static FmxElementType valueByName(@NotBlank String name, FmxElementType defaultValue) {
+    var result = LocalData.map.get(name);
+    if (result == null) {
       result = defaultValue;
     }
     return result;

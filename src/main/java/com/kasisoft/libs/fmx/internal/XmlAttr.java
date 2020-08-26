@@ -1,13 +1,14 @@
 package com.kasisoft.libs.fmx.internal;
 
-import javax.annotation.*;
+import javax.validation.constraints.NotNull;
 
-import lombok.experimental.*;
+import lombok.experimental.FieldDefaults;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
 
 /**
- * @author daniel.kasmeroglu@kasisoft.net
+ * @author daniel.kasmeroglu@kasisoft.com
  */
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -19,22 +20,22 @@ public class XmlAttr implements Comparable<XmlAttr> {
   String   localName;
   String   prefix;
   
-  public XmlAttr( String namespaceUri, String qualifiedName, String value ) {
+  public XmlAttr(String namespaceUri, String qualifiedName, String value) {
     nsUri     = namespaceUri;
     qName     = qualifiedName;
     attrValue = value;
     localName = qualifiedName;
     prefix    = null;
     int colon = qualifiedName.indexOf(':');
-    if( colon > 0 ) {
+    if (colon > 0) {
       prefix    = qualifiedName.substring( 0, colon );
       localName = qualifiedName.substring( colon + 1 ); 
     }
   }
   
   @Override
-  public int compareTo( @Nonnull XmlAttr o ) {
-    return getQName().compareTo( o.getQName() );
+  public int compareTo(@NotNull XmlAttr o) {
+    return getQName().compareTo(o.getQName());
   }
   
 } /* ENDCLASS */

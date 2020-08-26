@@ -1,61 +1,84 @@
 package com.kasisoft.libs.fmx.internal;
 
-import static com.kasisoft.libs.fmx.FmxConstants.*;
-import static com.kasisoft.libs.fmx.internal.Messages.*;
+import static com.kasisoft.libs.fmx.FmxConstants.CTX_ATTRIBUTE_NAME;
+import static com.kasisoft.libs.fmx.FmxConstants.CTX_DEFAULT_NAME;
+import static com.kasisoft.libs.fmx.FmxConstants.CTX_NAMESPACE;
+import static com.kasisoft.libs.fmx.FmxConstants.FMT_NAMESPACE;
+import static com.kasisoft.libs.fmx.FmxConstants.FMX_NAMESPACE;
+import static com.kasisoft.libs.fmx.internal.Messages.error_depends_values;
+import static com.kasisoft.libs.fmx.internal.Messages.error_escape_without_expr;
+import static com.kasisoft.libs.fmx.internal.Messages.error_escape_without_name;
+import static com.kasisoft.libs.fmx.internal.Messages.error_import_values;
+import static com.kasisoft.libs.fmx.internal.Messages.error_include_values;
+import static com.kasisoft.libs.fmx.internal.Messages.error_list_values;
+import static com.kasisoft.libs.fmx.internal.Messages.error_macro_without_name;
+import static com.kasisoft.libs.fmx.internal.Messages.error_with_values;
 
-import com.kasisoft.libs.common.text.*;
-import com.kasisoft.libs.common.util.*;
+import com.kasisoft.libs.common.pools.Buckets;
+import com.kasisoft.libs.common.text.StringFBuilder;
+import com.kasisoft.libs.common.text.StringFunctions;
 
-import org.xml.sax.*;
-import org.xml.sax.helpers.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.Locator;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
-import javax.annotation.*;
+import javax.validation.constraints.NotNull;
 
-import java.util.function.*;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-import java.util.stream.*;
+import java.util.stream.Collectors;
 
-import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+import java.util.concurrent.atomic.AtomicLong;
 
-import lombok.experimental.*;
+import lombok.experimental.FieldDefaults;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
- * @author daniel.kasmeroglu@kasisoft.net
+ * @author daniel.kasmeroglu@kasisoft.com
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public final class TranslationContext extends DefaultHandler {
 
-  private static final Bucket<StringFBuilder> STRINGFBUILDER = BucketFactories.newStringFBuilderBucket();
-  private static final AtomicLong             COUNTER        = new AtomicLong();
-  
+  private static final AtomicLong COUNTER = new AtomicLong();
+
   String                                            content;
   StringFBuilder                                    replacer;
   StringFBuilder                                    builder;
   Locator                                           locator;
-  
+
   // mapper for directive names
   Function<String, String>                          directiveProvider;
   Map<String, BiFunction<String, String, String>>   attributeMappers;
-  
+
   // test for fmx configurations (uri, prefix)
   BiPredicate<String, String>                       isFmxRelevant;
   Predicate<List<XmlAttr>>                          hasFmxAttribute;
-  
+
   // test if an attribute needs to be put into a context map
   Predicate<XmlAttr>                                isCtxAttribute;
   Predicate<XmlAttr>                                isNotCtxAttribute;
-  
+
   // a stack of flags per element: the scenario of a normal xml element which contains fmx attributes
   // requires attributes which aren't passed through endElement so we need to remember
   Stack<Boolean>                                    fmxXml;
-  
+
   // the with scenario requires to restore the previous model when done, so we need to remember the
   // temporarily used variable
   Stack<WithRecord>                                 withRecords;
-  
+
   // an xml element with fmx attributes can generate multiple statements which need to be closed in the end,
   // so we remember here which statements had been generated
   Stack<Boolean>                                    fmxXmlOnElement;
@@ -64,7 +87,7 @@ public final class TranslationContext extends DefaultHandler {
   // this stack is used to remember the begin of the inner xml tree, so if the wrapping-condition is false
   // we're rendering the inner content into the else part of the if-then-else ftl statement
   Stack<Integer>                                    innerWraps;
-  
+
   // remembering newlines in case an fmx:depends is located on a single line, so we're dropping line feeds
   // in order to prevent ugly "disruption" of the FTL text (for instance: <i fmx:depends="x">text<i> will no
   // longer be rendered as [#if x]\n<i>text</i>\n[/#if]). we're storing pairs of [linenumber, newline-index]
@@ -73,32 +96,32 @@ public final class TranslationContext extends DefaultHandler {
   // remember the location after the last opening xml element. if the closing xml element follows immediately
   // thereafter we can generate a directly close xml element
   int                                               lastOpen;
-  
+
   // xml escaping
   int                                               xescape;
   Stack<Boolean>                                    xescapes;
-  
-  public TranslationContext( @Nonnull String fmxPrefix, Function<String, String> directives, Map<String, BiFunction<String, String, String>> mappers ) {
+
+  public TranslationContext(@NotNull String fmxPrefix, Function<String, String> directives, Map<String, BiFunction<String, String, String>> mappers) {
     directiveProvider = directives;
     attributeMappers  = mappers != null ? mappers : Collections.emptyMap();
-    isCtxAttribute    = $_ -> CTX_NAMESPACE.equals( $_.getNsUri() );
+    isCtxAttribute    = $_ -> CTX_NAMESPACE.equals($_.getNsUri());
     isNotCtxAttribute = isCtxAttribute.negate();
-    isFmxRelevant     = ($1, $2) -> FMX_NAMESPACE.equals( $1 ) || (($2 != null) && $2.startsWith( fmxPrefix ) );
+    isFmxRelevant     = ($1, $2) -> FMX_NAMESPACE.equals($1) || (($2 != null) && $2.startsWith(fmxPrefix));
     hasFmxAttribute   = $ -> $.parallelStream()
-      .map( $_ -> isFmxRelevant.test( $_.getNsUri(), $_.getQName() ) )
-      .reduce( false, ($1, $2) -> $1 || $2 );
+      .map($_ -> isFmxRelevant.test($_.getNsUri(), $_.getQName()))
+      .reduce(false, ($1, $2) -> $1 || $2);
   }
-  
+
   @Override
-  public void setDocumentLocator( Locator loc ) {
+  public void setDocumentLocator(Locator loc) {
     locator = loc;
-    super.setDocumentLocator( loc );
+    super.setDocumentLocator(loc);
   }
-  
+
   @Override
   public void startDocument() throws SAXException {
-    builder           = STRINGFBUILDER.allocate();
-    replacer          = STRINGFBUILDER.allocate();
+    builder           = Buckets.bucketStringFBuilder().allocate();
+    replacer          = Buckets.bucketStringFBuilder().allocate();
     withRecords       = new Stack<>();
     fmxXml            = new Stack<>();
     fmxXmlOnElement   = new Stack<>();
@@ -114,8 +137,8 @@ public final class TranslationContext extends DefaultHandler {
   @Override
   public void endDocument() throws SAXException {
     content           = builder.toString();
-    STRINGFBUILDER.free( builder  );
-    STRINGFBUILDER.free( replacer );
+    Buckets.bucketStringFBuilder().free(builder);
+    Buckets.bucketStringFBuilder().free(replacer);
     builder           = null;
     replacer          = null;
     withRecords       = null;
@@ -126,43 +149,43 @@ public final class TranslationContext extends DefaultHandler {
   }
 
   private String newVar() {
-    return String.format( "fmx_old%d", COUNTER.incrementAndGet() );
+    return String.format("fmx_old%d", COUNTER.incrementAndGet());
   }
-  
-  private void xmlAttribute( XmlAttr attr ) {
+
+  private void xmlAttribute(@NotNull XmlAttr attr) {
     String nsUri = attr.getNsUri();
     // only emit non-fmx attributes
-    if( ! FMX_NAMESPACE.equals( nsUri ) ) {
-      String nodeValue = escapeValue( attr.getAttrValue() );
-      String prefix    = attr.getPrefix();
-      String localName = attr.getLocalName();
-      if( prefix != null ) {
+    if (!FMX_NAMESPACE.equals(nsUri)) {
+      var nodeValue = escapeValue(attr.getAttrValue());
+      var prefix    = attr.getPrefix();
+      var localName = attr.getLocalName();
+      if (prefix != null) {
         // generate a test for the attribute value indicated by the namespace
-        if( FMT_NAMESPACE.equals( nsUri ) ) {
-          builder.appendF( "[#if (%s)?has_content] %s=\"${%s}\"[/#if]", nodeValue, localName, nodeValue );
+        if (FMT_NAMESPACE.equals(nsUri)) {
+          builder.appendF("[#if (%s)?has_content] %s=\"${%s}\"[/#if]", nodeValue, localName, nodeValue);
         } else {
-          builder.appendF( " %s:%s=\"%s\"", prefix, localName, nodeValue );
+          builder.appendF(" %s:%s=\"%s\"", prefix, localName, nodeValue);
         }
       } else {
-        builder.appendF( " %s=\"%s\"", localName, nodeValue );
+        builder.appendF(" %s=\"%s\"", localName, nodeValue);
       }
     }
   }
 
-  private String escapeValue( String nodeValue ) {
+  private String escapeValue(String nodeValue) {
     replacer.setLength(0);
-    replacer.append( nodeValue );
-    for( int i = replacer.length() - 1; i >= 0; i-- ) {
+    replacer.append(nodeValue);
+    for (var i = replacer.length() - 1; i >= 0; i--) {
       char ch = replacer.charAt(i);
-      if( ch == '\"' ) {
+      if (ch == '\"') {
         replacer.deleteCharAt(i);
-        replacer.insert( i, "&quot;" );
-      } else if( ch == '<' ) {
+        replacer.insert(i, "&quot;");
+      } else if (ch == '<') {
         replacer.deleteCharAt(i);
-        replacer.insert( i, "&lt;" );
-      } else if( ch == '>' ) {
+        replacer.insert(i, "&lt;");
+      } else if (ch == '>') {
         replacer.deleteCharAt(i);
-        replacer.insert( i, "&gt;" );
+        replacer.insert(i, "&gt;");
       }
     }
     return replacer.toString();
@@ -174,414 +197,419 @@ public final class TranslationContext extends DefaultHandler {
   }
 
   @Override
-  public void startElement( String uri, String localName, String qName, Attributes attributes ) throws SAXException {
-    boolean       isFmxXml = false;
-    List<XmlAttr> attrs    = getAttributes( attributes );
-    if( isFmxRelevant.test( uri, qName ) ) {
+  public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+    var isFmxXml = false;
+    var attrs    = getAttributes(attributes);
+    if (isFmxRelevant.test(uri, qName)) {
       // dedicated fmx:??? element
-      startFmxElement( uri, localName, qName, attrs );
-    } else if( hasFmxAttribute.test( attrs ) ) {
+      startFmxElement(uri, localName, qName, attrs);
+    } else if (hasFmxAttribute.test(attrs)) {
       // xml element which contains an fmx attribute
-      startFmxXmlElement( uri, localName, qName, attrs );
+      startFmxXmlElement(uri, localName, qName, attrs);
       isFmxXml = true;
     } else {
       // simple xml element
-      startXmlElement( uri, localName, qName, attrs );
+      startXmlElement(uri, localName, qName, attrs);
     }
-    fmxXml.push( isFmxXml );
+    fmxXml.push(isFmxXml);
   }
-  
+
   @Override
-  public void endElement( String uri, String localName, String qName ) throws SAXException {
+  public void endElement(String uri, String localName, String qName) throws SAXException {
     boolean isFmxXml = fmxXml.pop();
-    if( isFmxRelevant.test( uri, qName ) ) {
+    if (isFmxRelevant.test(uri, qName)) {
       // dedicated fmx:??? element
-      endFmxElement( uri, localName, qName );
-    } else if( isFmxXml ) {
+      endFmxElement(uri, localName, qName);
+    } else if (isFmxXml) {
       // xml element which contains an fmx attribute
-      endFmxXmlElement( uri, localName, qName );
+      endFmxXmlElement(uri, localName, qName);
     } else {
       // simple xml element
-      endXmlElement( uri, localName, qName );
+      endXmlElement(uri, localName, qName);
     }
   }
-  
-  private void startFmxElement( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    FmxElementType type = FmxElementType.valueByName( localName, FmxElementType.directive );
-    switch( type ) {
-    case directive    : emitDirectiveOpen( uri, localName, qName, attrs ); break;
-    case doctype      : emitDoctypeOpen  ( uri, localName, qName, attrs ); break;
-    case include      : emitIncludeOpen  ( uri, localName, qName, attrs ); break;
-    case importDecl   : emitImportOpen   ( uri, localName, qName, attrs ); break;
-    case list         : emitListOpen     ( uri, localName, qName, attrs ); break;
-    case depends      : emitDependsOpen  ( uri, localName, qName, attrs ); break;
-    case with         : emitWithOpen     ( uri, localName, qName, attrs ); break;
-    case escape       : emitEscapeOpen   ( uri, localName, qName, attrs ); break;
-    case compress     : emitCompressOpen ( uri, localName, qName, attrs ); break;
-    case select       : emitSelectOpen   ( uri, localName, qName, attrs ); break;
-    case option       : emitOptionOpen   ( uri, localName, qName, attrs ); break;
-    case defaultcase  : emitDefaultOpen  ( uri, localName, qName, attrs ); break;
-    case macro        : emitMacroOpen    ( uri, localName, qName, attrs ); break;
-    case nested       : emitNestedOpen   ( uri, localName, qName, attrs ); break;
-    case xescape      : emitXescapeOpen  ( uri, localName, qName, attrs ); break;
+
+  private void startFmxElement(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    /** @todo [25-AUG-2020:KASI]   Use a map with functions for that */
+    var type = FmxElementType.valueByName(localName, FmxElementType.directive);
+    switch (type) {
+    case directive    : emitDirectiveOpen(uri, localName, qName, attrs); break;
+    case doctype      : emitDoctypeOpen  (uri, localName, qName, attrs); break;
+    case include      : emitIncludeOpen  (uri, localName, qName, attrs); break;
+    case importDecl   : emitImportOpen   (uri, localName, qName, attrs); break;
+    case list         : emitListOpen     (uri, localName, qName, attrs); break;
+    case depends      : emitDependsOpen  (uri, localName, qName, attrs); break;
+    case with         : emitWithOpen     (uri, localName, qName, attrs); break;
+    case escape       : emitEscapeOpen   (uri, localName, qName, attrs); break;
+    case compress     : emitCompressOpen (uri, localName, qName, attrs); break;
+    case select       : emitSelectOpen   (uri, localName, qName, attrs); break;
+    case option       : emitOptionOpen   (uri, localName, qName, attrs); break;
+    case defaultcase  : emitDefaultOpen  (uri, localName, qName, attrs); break;
+    case macro        : emitMacroOpen    (uri, localName, qName, attrs); break;
+    case nested       : emitNestedOpen   (uri, localName, qName, attrs); break;
+    case xescape      : emitXescapeOpen  (uri, localName, qName, attrs); break;
     }
   }
-  
+
   private void endFmxElement( String uri, String localName, String qName ) {
-    FmxElementType type = FmxElementType.valueByName( localName, FmxElementType.directive );
-    switch( type ) {
-    case directive    : emitDirectiveClose ( uri, localName, qName ); break;
-    case list         : emitListClose      ( uri, localName, qName ); break;
-    case depends      : emitDependsClose   ( uri, localName, qName ); break;
-    case with         : emitWithClose      ( uri, localName, qName ); break;
-    case escape       : emitEscapeClose    ( uri, localName, qName ); break;
-    case compress     : emitCompressClose  ( uri, localName, qName ); break;
-    case select       : emitSelectClose    ( uri, localName, qName ); break;
-    case option       : emitOptionClose    ( uri, localName, qName ); break;
-    case defaultcase  : emitDefaultClose   ( uri, localName, qName ); break;
-    case macro        : emitMacroClose     ( uri, localName, qName ); break;
-    case nested       : emitNestedClose    ( uri, localName, qName ); break;
-    case xescape      : emitXescapeClose   ( uri, localName, qName ); break;
+    /** @todo [25-AUG-2020:KASI]   Use a map with functions for that */
+    var type = FmxElementType.valueByName(localName, FmxElementType.directive);
+    switch (type) {
+    case directive    : emitDirectiveClose (uri, localName, qName); break;
+    case list         : emitListClose      (uri, localName, qName); break;
+    case depends      : emitDependsClose   (uri, localName, qName); break;
+    case with         : emitWithClose      (uri, localName, qName); break;
+    case escape       : emitEscapeClose    (uri, localName, qName); break;
+    case compress     : emitCompressClose  (uri, localName, qName); break;
+    case select       : emitSelectClose    (uri, localName, qName); break;
+    case option       : emitOptionClose    (uri, localName, qName); break;
+    case defaultcase  : emitDefaultClose   (uri, localName, qName); break;
+    case macro        : emitMacroClose     (uri, localName, qName); break;
+    case nested       : emitNestedClose    (uri, localName, qName); break;
+    case xescape      : emitXescapeClose   (uri, localName, qName); break;
     }
   }
-  
-  private void startFmxXmlElement( String uri, String localName, String qName, List<XmlAttr> attrs ) {
 
-    String dependsExpression  = FmxAttr . depends . getValue( attrs );
-    String listExpression     = FmxAttr . list    . getValue( attrs );
-    String iteratorName       = FmxAttr . it      . getValue( attrs, "it" );
-    String withExpression     = FmxAttr . with    . getValue( attrs );
-    String withName           = FmxAttr . name    . getValue( attrs, "model" );
-    String wrapExpression     = FmxAttr . wrap    . getValue( attrs );
-    String xescapeExpression  = FmxAttr . xescape . getValue( attrs );
-    
-    String indent = getCurrentIndent();
-    if( indent.length() > 0 ) {
+  private void startFmxXmlElement(String uri, String localName, String qName, List<XmlAttr> attrs) {
+
+    var dependsExpression  = FmxAttr . depends . getValue(attrs);
+    var listExpression     = FmxAttr . list    . getValue(attrs);
+    var iteratorName       = FmxAttr . it      . getValue(attrs, "it");
+    var withExpression     = FmxAttr . with    . getValue(attrs);
+    var withName           = FmxAttr . name    . getValue(attrs, "model");
+    var wrapExpression     = FmxAttr . wrap    . getValue(attrs);
+    var xescapeExpression  = FmxAttr . xescape . getValue(attrs);
+
+    var indent = getCurrentIndent();
+    if (indent.length() > 0) {
       // remove the current indention
-      builder.setLength( builder.length() - indent.length() );
+      builder.setLength(builder.length() - indent.length());
     }
-    indentions.push( indent );
-    
-    openDepends( indent, dependsExpression );
-    openWith( indent, withExpression, withName );
-    openList( indent, listExpression, iteratorName );
-    openWrap( indent, wrapExpression );
-    
-    if( xescapeExpression != null ) {
+    indentions.push(indent);
+
+    openDepends(indent, dependsExpression);
+    openWith(indent, withExpression, withName);
+    openList(indent, listExpression, iteratorName);
+    openWrap(indent, wrapExpression);
+
+    if (xescapeExpression != null) {
       xescape++;
-      xescapes.push( true );
+      xescapes.push(true);
     } else {
-      xescapes.push( false );
+      xescapes.push(false);
     }
-    
+
     // add the previously removed indention AFTER the ftl conditions have been rendered
-    builder.append( indent );
-    startXmlElement( uri, localName, qName, attrs );
-    
+    builder.append(indent);
+    startXmlElement(uri, localName, qName, attrs);
+
     // remember the begin of the inner xml block
-    innerWraps.push( builder.length() );
-    
+    innerWraps.push(builder.length());
+
   }
 
-  private void endFmxXmlElement( String uri, String localName, String qName ) {
-    
+  private void endFmxXmlElement(String uri, String localName, String qName) {
+
     // capture the range of the inner statement
-    int open  = innerWraps.pop();
-    int close = builder.length();
-    
-    endXmlElement( uri, localName, qName );
-    
-    boolean isxescape = xescapes.pop();
-    if( isxescape ) {
+    var open  = innerWraps.pop();
+    var close = builder.length();
+
+    endXmlElement(uri, localName, qName);
+
+    var isxescape = xescapes.pop();
+    if (isxescape) {
       xescape--;
     }
-    
-    String indent = indentions.pop();
-    closeWrap( indent, open, close );
-    closeList( indent );
-    closeWith( indent );
-    closeDepends( indent );
-    
+
+    var indent = indentions.pop();
+    closeWrap(indent, open, close);
+    closeList(indent);
+    closeWith(indent);
+    closeDepends(indent);
+
   }
 
-  private void startXmlElement( String uri, String localName, String qName, List<XmlAttr> attrs ) {
+  private void startXmlElement(String uri, String localName, String qName, List<XmlAttr> attrs) {
     String prefix = null;
-    int    colon  = qName.indexOf(':');
-    if( colon > 0 ) {
-      prefix = qName.substring( 0, colon );
+    var    colon  = qName.indexOf(':');
+    if (colon > 0) {
+      prefix = qName.substring(0, colon);
     }
-    builder.appendF( "%s%s", xlt(), qName );
-    attrs.forEach( this::xmlAttribute );
-    if( prefix != null ) {
-      xmlAttribute( new XmlAttr( null, String.format( "xmlns:%s", prefix ), uri ) );
+    builder.appendF("%s%s", xlt(), qName);
+    attrs.forEach(this::xmlAttribute);
+    if (prefix != null) {
+      xmlAttribute(new XmlAttr(null, String.format("xmlns:%s", prefix), uri));
     }
-    builder.append( xgt() );
+    builder.append(xgt());
     lastOpen = builder.length();
   }
-  
-  private void endXmlElement( String uri, String localName, String qName ) {
-    if( builder.length() == lastOpen ) {
+
+  private void endXmlElement(String uri, String localName, String qName) {
+    if (builder.length() == lastOpen) {
       // get rid of '>' and replace it with a directly closing '/>'
-      builder.setLength( builder.length() - xgt().length() );
-      builder.appendF( "/%s", xgt() );
+      builder.setLength(builder.length() - xgt().length());
+      builder.appendF("/%s", xgt());
     } else {
-      builder.appendF( "%s/%s%s", xlt(), qName, xgt() );
+      builder.appendF("%s/%s%s", xlt(), qName, xgt());
     }
   }
-  
+
   private String xlt() {
     return xescape > 0 ? "&lt;" : "<";
   }
-  
+
   private String xgt() {
     return xescape > 0 ? "&gt;" : ">";
   }
-  
+
   // xescape
-  private void emitXescapeOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
+  private void emitXescapeOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     xescape++;
   }
 
-  private void emitXescapeClose( String uri, String localName, String qName ) {
+  private void emitXescapeClose(String uri, String localName, String qName) {
     xescape--;
   }
-  
+
   // select (switch)
-  
-  private void emitSelectOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String value = FmxAttr.value.getValue( attrs );
-    builder.appendF( "[#switch %s]", value );
+
+  private void emitSelectOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var value = FmxAttr.value.getValue(attrs);
+    builder.appendF("[#switch %s]", value);
   }
 
-  private void emitSelectClose( String uri, String localName, String qName ) {
-    builder.append( "[/#switch]" );
+  private void emitSelectClose(String uri, String localName, String qName) {
+    builder.append("[/#switch]");
   }
-  
+
   // option (case)
-  
-  private void emitOptionOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String expected = FmxAttr.value.getValue( attrs );
-    builder.appendF( "[#case %s]", expected );
+
+  private void emitOptionOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var expected = FmxAttr.value.getValue(attrs);
+    builder.appendF("[#case %s]", expected);
   }
 
-  private void emitOptionClose( String uri, String localName, String qName ) {
-    builder.append( "[#break]" );
+  private void emitOptionClose(String uri, String localName, String qName) {
+    builder.append("[#break]");
   }
 
   // macro
-  private void emitMacroOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String name = FmxAttr.name.getRequiredValue( attrs, error_macro_without_name );
-    builder.appendF( "[#macro %s", name );
-    Predicate<XmlAttr> isFmxAttr    = $ -> isFmxRelevant.test( $.getNsUri(), $.getQName() );
+  private void emitMacroOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var name = FmxAttr.name.getRequiredValue(attrs, error_macro_without_name);
+    builder.appendF("[#macro %s", name);
+    Predicate<XmlAttr> isFmxAttr    = $ -> isFmxRelevant.test($.getNsUri(), $.getQName());
     Predicate<XmlAttr> isNoFmxAttr  = isFmxAttr.negate();
     attrs.stream()
-      .filter( isNoFmxAttr )
-      .map( XmlAttr::getLocalName )
-      .forEach( $ -> builder.appendF( " %s", $ ) );
-    builder.append( "]" );
+      .filter(isNoFmxAttr)
+      .map(XmlAttr::getLocalName)
+      .forEach($ -> builder.appendF(" %s", $));
+    builder.append("]");
   }
 
-  private void emitMacroClose( String uri, String localName, String qName ) {
-    builder.appendF( "[/#macro]" );
+  private void emitMacroClose(String uri, String localName, String qName) {
+    builder.appendF("[/#macro]");
   }
 
   // macro
-  private void emitNestedOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    builder.append( "[#nested]" );
+  private void emitNestedOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    builder.append("[#nested]");
   }
 
-  private void emitNestedClose( String uri, String localName, String qName ) {
+  private void emitNestedClose(String uri, String localName, String qName) {
   }
 
   // defaultcase (default)
-  
-  private void emitDefaultOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    builder.append( "[#default]" );
+
+  private void emitDefaultOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    builder.append("[#default]");
   }
 
-  private void emitDefaultClose( String uri, String localName, String qName ) {
+  private void emitDefaultClose(String uri, String localName, String qName) {
   }
 
   // compress
-  
-  private void emitCompressOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    builder.append( "[#compress]" );
+
+  private void emitCompressOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    builder.append("[#compress]");
   }
 
-  private void emitCompressClose( String uri, String localName, String qName ) {
-    builder.append( "[/#compress]" );
-  }
-
-  // with
-  
-  private void emitEscapeOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String name = FmxAttr.name.getRequiredValue( attrs, error_escape_without_name );
-    String expr = FmxAttr.expr.getRequiredValue( attrs, error_escape_without_expr );
-    builder.appendF( "[#escape %s as %s]", name, expr );
-  }
-
-  private void emitEscapeClose( String uri, String localName, String qName ) {
-    builder.append( "[/#escape]" );
+  private void emitCompressClose(String uri, String localName, String qName) {
+    builder.append("[/#compress]");
   }
 
   // with
-  
-  private void emitWithOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String modelName  = FmxAttr.name.getValue( attrs, "model" );
-    String modelExpr  = FmxAttr.value.getRequiredValue( attrs, error_with_values );
+
+  private void emitEscapeOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var name = FmxAttr.name.getRequiredValue(attrs, error_escape_without_name);
+    var expr = FmxAttr.expr.getRequiredValue(attrs, error_escape_without_expr);
+    builder.appendF("[#escape %s as %s]", name, expr);
+  }
+
+  private void emitEscapeClose(String uri, String localName, String qName) {
+    builder.append("[/#escape]");
+  }
+
+  // with
+
+  private void emitWithOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var modelName  = FmxAttr.name.getValue(attrs, "model");
+    var modelExpr  = FmxAttr.value.getRequiredValue(attrs, error_with_values);
     // this variable name is used in case it already exists within the model, so we're backing it up before
-    String var = newVar();
-    builder.appendF( "[#assign %s=%s! /]\n", var, modelName );
-    builder.appendF( "[#assign %s=%s /]", modelName, modelExpr );
-    withRecords.push( new WithRecord( modelName, var ) );
+    var var = newVar();
+    builder.appendF("[#assign %s=%s! /]\n", var, modelName);
+    builder.appendF("[#assign %s=%s /]", modelName, modelExpr);
+    withRecords.push(new WithRecord(modelName, var));
   }
 
-  private void emitWithClose( String uri, String localName, String qName ) {
-    WithRecord record = withRecords.pop();
-    builder.appendF( "[#assign %s=%s /]\n", record.getModelname(), record.getVarname() );
+  private void emitWithClose(String uri, String localName, String qName) {
+    var record = withRecords.pop();
+    builder.appendF("[#assign %s=%s /]\n", record.getModelname(), record.getVarname());
   }
 
   // directive
-  
-  private void emitDirectiveOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String ftlName = directiveProvider.apply( localName );
-    builder.appendF( "[@%s", ftlName );
+
+  private void emitDirectiveOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var ftlName = directiveProvider.apply(localName);
+    builder.appendF("[@%s", ftlName);
     // write down all attributes that shall be kept
-    attrs.stream().filter( isNotCtxAttribute ).forEach( $ -> fmAttribute( ftlName, $ ) );
+    attrs.stream().filter(isNotCtxAttribute).forEach($ -> fmAttribute(ftlName, $));
     // generate a context map attribute if desired
-    emitContextAttributes( attrs.stream().filter( isCtxAttribute ).collect( Collectors.toList() ) );
-    builder.append( "]" );
+    emitContextAttributes(attrs.stream().filter(isCtxAttribute).collect(Collectors.toList()));
+    builder.append("]");
   }
-  
-  private void emitContextAttributes( List<XmlAttr> ctxAttrs ) {
-    if( ! ctxAttrs.isEmpty() ) {
+
+  private void emitContextAttributes(List<XmlAttr> ctxAttrs) {
+    if (!ctxAttrs.isEmpty()) {
       // write down the special attributes passed as a map
-      builder.appendF( " %s={", getContextAttributeName( ctxAttrs ) );
+      builder.appendF(" %s={", getContextAttributeName(ctxAttrs));
       // if there's only one element is the attribute name so we don't need to go through the attributes
-      if( ctxAttrs.size() > 1 ) {
-        ctxAttrs.forEach( this::ctxAttribute );
-        builder.setLength( builder.length() - 2 ); // get rid of the last ', ' sequence
+      if (ctxAttrs.size() > 1) {
+        ctxAttrs.forEach(this::ctxAttribute);
+        builder.setLength(builder.length() - 2); // get rid of the last ', ' sequence
       }
-      builder.appendF( "}" );
+      builder.appendF("}");
     }
   }
-  
-  private String getContextAttributeName( List<XmlAttr> ctxAttrs ) {
-    String            result    = null;
-    Optional<XmlAttr> attrName  = ctxAttrs.stream().filter( $ -> CTX_ATTRIBUTE_NAME.equals( $.getLocalName() ) ).findAny();
-    if( attrName.isPresent() ) {
-      result = StringFunctions.cleanup( attrName.get().getAttrValue() );
+
+  private String getContextAttributeName(List<XmlAttr> ctxAttrs) {
+    String  result    = null;
+    var     attrName  = ctxAttrs.stream().filter($ -> CTX_ATTRIBUTE_NAME.equals($.getLocalName())).findAny();
+    if (attrName.isPresent()) {
+      result = StringFunctions.cleanup(attrName.get().getAttrValue());
     }
     return result != null ? result : CTX_DEFAULT_NAME;
   }
 
-  private void emitDirectiveClose( String uri, String localName, String qName ) {
-    String name = directiveProvider.apply( localName );
-    builder.appendF( "[/@%s]", name );
+  private void emitDirectiveClose(String uri, String localName, String qName) {
+    var name = directiveProvider.apply(localName);
+    builder.appendF("[/@%s]", name);
   }
 
-  private void ctxAttribute( XmlAttr attr ) {
+  private void ctxAttribute(XmlAttr attr) {
     // ignore this attribute as it's only supposed to provide a name
-    if( ! CTX_ATTRIBUTE_NAME.equals( attr.getLocalName() ) ) {
-      builder.appendF( "'%s': %s, ", attr.getLocalName(), attr.getAttrValue() );
+    if (!CTX_ATTRIBUTE_NAME.equals(attr.getLocalName())) {
+      builder.appendF("'%s': %s, ", attr.getLocalName(), attr.getAttrValue());
     }
   }
-  
-  private void fmAttribute( String ftlName, XmlAttr attr ) {
-    if( ! FMX_NAMESPACE.equals( attr.getNsUri() ) ) {
+
+  private void fmAttribute(String ftlName, XmlAttr attr) {
+    if (!FMX_NAMESPACE.equals(attr.getNsUri())) {
       // change the attribute value depending on the current directive
-      String value = getAttributeMapper( ftlName ).apply( attr.getLocalName(), attr.getAttrValue() );
-      builder.appendF( " %s=%s", attr.getQName(), value );
+      var value = getAttributeMapper(ftlName).apply(attr.getLocalName(), attr.getAttrValue());
+      builder.appendF(" %s=%s", attr.getQName(), value);
     }
   }
-  
-  @Nonnull
-  private BiFunction<String, String, String> getAttributeMapper( String ftlName ) {
-    BiFunction<String, String, String> result = attributeMappers.get( ftlName );
-    if( result == null ) {
+
+  @NotNull
+  private BiFunction<String, String, String> getAttributeMapper(String ftlName) {
+    BiFunction<String, String, String> result = attributeMappers.get(ftlName);
+    if (result == null) {
       result = this::defaultAttributeMapper;
     }
     return result;
   }
-  
-  private String defaultAttributeMapper( String localName, String value ) {
-    if( value.startsWith("'") && value.endsWith("'") ) {
+
+  private String defaultAttributeMapper(String localName, String value) {
+    if (value.startsWith("'") && value.endsWith("'")) {
       // passing an ordinary value
-      value = String.format( "\"%s\"", value.substring( 1, value.length() - 1 ) );
+      value = String.format("\"%s\"", value.substring(1, value.length() - 1));
     }
     return value;
   }
-  
+
   // depends
-  
-  private void emitDependsOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String dependsExpr = FmxAttr.value.getRequiredValue( attrs, error_depends_values );
-    builder.appendF( "[#if %s]", dependsExpr );
+
+  private void emitDependsOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var dependsExpr = FmxAttr.value.getRequiredValue(attrs, error_depends_values);
+    builder.appendF("[#if %s]", dependsExpr);
   }
 
-  private void emitDependsClose( String uri, String localName, String qName ) {
-    builder.appendF( "[/#if]" );
+  private void emitDependsClose(String uri, String localName, String qName) {
+    builder.appendF("[/#if]");
   }
 
   // doctype
-  
-  private void emitDoctypeOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    builder.appendF( "<!doctype %s>", FmxAttr.value.getValue( attrs, "html" ) );
+
+  private void emitDoctypeOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    builder.appendF("<!doctype %s>", FmxAttr.value.getValue(attrs, "html"));
   }
 
   // include
-  
-  private void emitIncludeOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String path = FmxAttr.path.getRequiredValue( attrs, error_include_values );
-    builder.appendF( "[#include '%s' /]", path );
+
+  private void emitIncludeOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var path = FmxAttr.path.getRequiredValue(attrs, error_include_values);
+    builder.appendF("[#include '%s' /]", path);
   }
 
   // import
-  
-  private void emitImportOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String path = FmxAttr.path.getRequiredValue( attrs, error_import_values );
-    String name = FmxAttr.name.getRequiredValue( attrs, error_import_values );
-    builder.appendF( "[#import '%s' as %s /]", path, name );
-  }
-  
-  // list
-  
-  private void emitListOpen( String uri, String localName, String qName, List<XmlAttr> attrs ) {
-    String listExpression = FmxAttr.value.getRequiredValue( attrs, error_list_values );
-    String iteratorName   = FmxAttr.it.getValue( attrs, "it" );
-    builder.appendF( "[#list %s as %s]", listExpression, iteratorName );
+
+  private void emitImportOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var path = FmxAttr.path.getRequiredValue(attrs, error_import_values);
+    var name = FmxAttr.name.getRequiredValue(attrs, error_import_values);
+    builder.appendF("[#import '%s' as %s /]", path, name);
   }
 
-  private void emitListClose( String uri, String localName, String qName ) {
-    builder.appendF( "[/#list]" );
+  // list
+
+  private void emitListOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    var listExpression = FmxAttr.value.getRequiredValue(attrs, error_list_values);
+    var iteratorName   = FmxAttr.it.getValue(attrs, "it");
+    builder.appendF("[#list %s as %s]", listExpression, iteratorName);
   }
-  
-  private void openWrap( String indent, String wrapExpression ) {
-    if( wrapExpression != null ) {
-      builder.appendF( "%s[#if %s]\n", indent, wrapExpression );
+
+  private void emitListClose(String uri, String localName, String qName) {
+    builder.appendF("[/#list]");
+  }
+
+  private void openWrap(String indent, String wrapExpression) {
+    if (wrapExpression != null) {
+      builder.appendF("%s[#if %s]\n", indent, wrapExpression);
     }
-    fmxXmlOnElement.push( wrapExpression != null );
+    fmxXmlOnElement.push(wrapExpression != null);
   }
-  
-  private void closeWrap( String indent, int open, int close ) {
-    boolean hasWrapExpression = fmxXmlOnElement.pop();
-    if( hasWrapExpression ) {
-      String innerContent = StringFunctions.trim( builder.substring( open, close ), " \t", false );
-      builder.appendF( "\n%s[#else]", indent );
-      builder.append( innerContent );
-      builder.appendF( "%s[/#if]", indent );
+
+  private void closeWrap(String indent, int open, int close) {
+    var hasWrapExpression = fmxXmlOnElement.pop();
+    if (hasWrapExpression) {
+      var before = builder.substring(open, close);
+      System.err.println("BEFORE: '" + before + "'");
+      System.err.println("AFTER : '" + StringFunctions.trim(builder.substring(open, close), " \t", false) + "'");
+      var innerContent = StringFunctions.trim(builder.substring(open, close), " \t", false);
+      builder.appendF("\n%s[#else]", indent);
+      builder.append(innerContent);
+      builder.appendF("%s[/#if]", indent);
     }
   }
-  
+
   private String getCurrentIndent() {
-    String result = "";
-    int    i      = builder.length() - 1;
-    while( i >= 0 ) {
-      char ch = builder.charAt(i);
-      if( ch == '\n' ) {
-        result = builder.substring( i + 1, builder.length() );
+    var result = "";
+    var i      = builder.length() - 1;
+    while (i >= 0) {
+      var ch = builder.charAt(i);
+      if (ch == '\n') {
+        result = builder.substring(i + 1, builder.length());
         break;
-      } else if( ! Character.isWhitespace( ch ) ) {
+      } else if (!Character.isWhitespace(ch)) {
         // there is some non-whitespace text after the line break,
         // so it seems intentional which means we don't get rid of whitespace
         result = "";
@@ -592,78 +620,78 @@ public final class TranslationContext extends DefaultHandler {
     return result;
   }
 
-  private void openWith( String indent, String withExpression, String modelName ) {
+  private void openWith(String indent, String withExpression, String modelName) {
     WithRecord result = null;
-    if( withExpression != null ) {
-      String varname = newVar();
-      builder.appendF( "%s[#assign %s=%s! /]\n", indent, varname, modelName );
-      builder.appendF( "%s[#assign %s=%s /]\n", indent, modelName, withExpression );
-      result = new WithRecord( modelName, varname );
+    if (withExpression != null) {
+      var varname = newVar();
+      builder.appendF("%s[#assign %s=%s! /]\n", indent, varname, modelName);
+      builder.appendF("%s[#assign %s=%s /]\n", indent, modelName, withExpression);
+      result = new WithRecord(modelName, varname);
     }
-    withRecords.push( result );
+    withRecords.push(result);
   }
-  
-  private void closeWith( String indent ) {
-    WithRecord result = withRecords.pop();
-    if( result != null ) { 
-      builder.appendF( "\n%s[#assign %s=%s /]", indent, result.getModelname(), result.getVarname() );
+
+  private void closeWith(String indent) {
+    var result = withRecords.pop();
+    if (result != null) {
+      builder.appendF("\n%s[#assign %s=%s /]", indent, result.getModelname(), result.getVarname());
     }
   }
 
-  private void openList( String indent, String listExpression, String iteratorName ) {
-    if( listExpression != null ) {
-      builder.appendF( "%s[#list %s as %s]\n", indent, listExpression, iteratorName );
+  private void openList(String indent, String listExpression, String iteratorName) {
+    if (listExpression != null) {
+      builder.appendF("%s[#list %s as %s]\n", indent, listExpression, iteratorName);
     }
-    fmxXmlOnElement.push( listExpression != null );
+    fmxXmlOnElement.push(listExpression != null);
   }
-  
-  private void closeList( String indent ) {
-    boolean hasListExpression = fmxXmlOnElement.pop();
-    if( hasListExpression ) { 
-      builder.appendF( "\n%s[/#list]", indent );
+
+  private void closeList(String indent) {
+    var hasListExpression = fmxXmlOnElement.pop();
+    if (hasListExpression) {
+      builder.appendF("\n%s[/#list]", indent);
     }
   }
 
-  private void openDepends( String indent, String dependsExpression ) {
-    if( dependsExpression != null ) {
-      builder.appendF( "%s[#if %s]\n", indent, dependsExpression );
-      dependsNL.push( new Integer[] { locator.getLineNumber(), builder.length() - 1 } );
+  private void openDepends(String indent, String dependsExpression) {
+    if (dependsExpression != null) {
+      builder.appendF("%s[#if %s]\n", indent, dependsExpression);
+      dependsNL.push(new Integer[] {locator.getLineNumber(), builder.length() - 1});
     }
-    fmxXmlOnElement.push( dependsExpression != null );
+    fmxXmlOnElement.push(dependsExpression != null);
   }
-  
-  private void closeDepends( String indent ) {
-    boolean hasDependsExpression = fmxXmlOnElement.pop();
-    if( hasDependsExpression ) {
-      Integer[] nl = dependsNL.pop();
-      if( nl[0].intValue() == locator.getLineNumber() ) {
+
+  private void closeDepends(String indent) {
+    var hasDependsExpression = fmxXmlOnElement.pop();
+    if (hasDependsExpression) {
+      var nl = dependsNL.pop();
+      if (nl[0].intValue() == locator.getLineNumber()) {
         // this fmx:depends element is located on a single line, so alter the output accordingly
-        builder.deleteCharAt( nl[1].intValue() );
-        builder.appendF( "%s[/#if]", indent );
+        builder.deleteCharAt(nl[1].intValue());
+        builder.appendF("%s[/#if]", indent);
       } else {
-        builder.appendF( "\n%s[/#if]", indent );
+        builder.appendF("\n%s[/#if]", indent);
       }
     }
   }
 
   @Override
-  public void characters( char ch[], int start, int length ) throws SAXException {
-    builder.append( ch, start, length );
+  public void characters(char ch[], int start, int length) throws SAXException {
+    builder.append(ch, start, length);
   }
 
   @Override
-  public void ignorableWhitespace( char ch[], int start, int length ) throws SAXException {
-    characters( ch, start, length );
+  public void ignorableWhitespace(char ch[], int start, int length) throws SAXException {
+    characters(ch, start, length);
   }
-  
-  private List<XmlAttr> getAttributes( Attributes attributes ) {
-    List<XmlAttr> result = Collections.emptyList();
-    if( attributes != null ) {
-      result = new ArrayList<>( attributes.getLength() );
-      for( int i = 0; i < attributes.getLength(); i++ ) {
-        result.add( new XmlAttr( attributes.getURI(i), attributes.getQName(i), attributes.getValue(i) ) );
+
+  private List<XmlAttr> getAttributes(Attributes attributes) {
+    var result = Collections.<XmlAttr>emptyList();
+    if (attributes != null) {
+      result = new ArrayList<>(attributes.getLength());
+      for (var i = 0; i < attributes.getLength(); i++) {
+        result.add(new XmlAttr(attributes.getURI(i), attributes.getQName(i), attributes.getValue(i)));
       }
-      Collections.sort( result );
+      Collections.sort(result);
     }
     return result;
   }
@@ -671,10 +699,10 @@ public final class TranslationContext extends DefaultHandler {
   @AllArgsConstructor
   @Getter @Setter
   private static class WithRecord {
-  
+
     String   modelname;
     String   varname;
-    
+
   } /* ENDCLASS */
-  
+
 } /* ENDCLASS */
