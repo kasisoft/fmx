@@ -270,7 +270,6 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven-surefire-plugin.version}</version>
           <configuration>
-            <!--  add-modules com.kasisoft.libs.fmx add-modules lombok add-opens test=ALL_MODULES-->
             <argLine>--enable-preview -Duser.country=DE -Duser.language=de</argLine>
           </configuration>
         </plugin>
