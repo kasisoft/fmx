@@ -346,7 +346,7 @@
   
   <distributionManagement>
     <!--
-    freemarker must be modularized first
+    freemarker must be modularized first, so we're not allowing this for now
     ### 
     <repository>
       <id>sonatype-nexus-staging</id>
