@@ -25,10 +25,11 @@ jobs:
         java-version: 14
     
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B clean install
       
-#    - name: Publish with Gradle
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
-#      run: ./gradlew publish
+    - name: Publish with Maven
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+      run: mvn -B deploy
+      
