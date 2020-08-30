@@ -1,0 +1,3 @@
+<#compress>
+  BIBO
+</#compress>

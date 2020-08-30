@@ -2,17 +2,18 @@ package com.kasisoft.libs.fmx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNotNull;
+import static org.testng.Assert.fail;
 
 import com.kasisoft.libs.common.io.IoFunctions;
 
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.function.BiFunction;
 
-import java.util.stream.Collectors;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -158,13 +159,15 @@ public class FmxTranslatorTest {
 
   });
   
-  FmxTranslator    translator;
+  FmxTranslator    translatorSquare;
+  FmxTranslator    translatorAngular;
   
-  @BeforeClass
+  @BeforeTest
   public void setup() {
     Map<String, BiFunction<String, String, String>> mappers = new HashMap<>();
     mappers.put("axolotl.frogger", this::customMapper); 
-    translator = new FmxTranslator(null, null, null, this::directiveMapper, mappers);
+    translatorSquare  = new FmxTranslator(null, null, null, this::directiveMapper, mappers, true);
+    translatorAngular = new FmxTranslator(null, null, null, this::directiveMapper, mappers, false);
   }
   
   private String customMapper(String attrLocalName, String attributeValue) {
@@ -179,27 +182,39 @@ public class FmxTranslatorTest {
     }
   }
   
+  private String loadText(ClassLoader cl, String resource) {
+    try {
+      var source = FmxTranslatorTest.class.getClassLoader().getResource(resource);
+      assertNotNull(String.format("Canot find '%s'", resource), source);
+      return IoFunctions.readText(source);
+    } catch (Exception ex) {
+      fail(ex.getLocalizedMessage());
+      return null;
+    }
+  }
+
+  private Object[] createRecord(ClassLoader cl, String testcase, boolean square) {
+    var fmx = loadText(cl, String.format("basic/%s.fmx", testcase));
+    var ftl = loadText(cl, String.format("basic/%s%s.ftl", testcase, square ? "-s" : "-a")); 
+    return new Object[] {testcase, fmx, ftl, square};
+  }
+
   @DataProvider(name = "convertData")
   public Object[][] convertData() {
-    ClassLoader    cl   = Thread.currentThread().getContextClassLoader();
-    List<Object[]> list = TESTCASES.stream().map($ -> createRecord(cl, $)).collect(Collectors.toList());
+    var cl   = getClass().getClassLoader();
+    var list = new ArrayList<Object[]>(); 
+    TESTCASES.stream().map($ -> createRecord(cl, $, false)).forEach(list::add);
+    TESTCASES.stream().map($ -> createRecord(cl, $, true)).forEach(list::add);
     return list.toArray(new Object[list.size()][2]);
-  }
-  
-  private Object[] createRecord(ClassLoader cl, String testcase) {
-    String fmx = loadText(cl, String.format("basic/%s.fmx", testcase));
-    String ftl = loadText(cl, String.format("basic/%s.ftl", testcase)); 
-    return new Object[] {testcase, fmx, ftl};
-  }
-  
-  private String loadText(ClassLoader cl, String resource) {
-    return IoFunctions.readText(cl.getResource(resource));
   }
 
   @Test(dataProvider = "convertData")
-  public void convert(String testcase, String fmxContent, String ftlContent) {
-    String converted  = translator.convert(fmxContent);
-    assertThat(converted, is(ftlContent));
+  public void convert(String testcase, String fmxContent, String ftlContent, boolean square) {
+    if (square) {
+      assertThat(testcase, translatorSquare.convert(fmxContent), is(ftlContent));
+    } else {
+      assertThat(testcase, translatorAngular.convert(fmxContent), is(ftlContent));
+    }
   }
-
+  
 } /* ENDCLASS */

@@ -32,7 +32,7 @@ public class FmxTemplateLoaderTest {
   
   @BeforeTest
   public void setup() {
-    classTemplateLoader = new ClassTemplateLoader(FmxTemplateLoaderTest.class, "/");
+    classTemplateLoader = new ClassTemplateLoader(FmxTemplateLoaderTest.class.getClassLoader(), "");
     fmxTemplateLoader   = new FmxTemplateLoader(classTemplateLoader);
   }
   

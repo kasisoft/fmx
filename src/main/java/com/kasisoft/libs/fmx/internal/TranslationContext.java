@@ -52,6 +52,108 @@ import lombok.Setter;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public final class TranslationContext extends DefaultHandler {
 
+  private static final String FMT_S_CLOSE_DEPENDS               = "\n%s[/#if]";
+  private static final String FMT_A_CLOSE_DEPENDS               = "\n%s</#if>";
+
+  private static final String FMT_S_CLOSE_LIST                  = "\n%s[/#list]";
+  private static final String FMT_A_CLOSE_LIST                  = "\n%s</#list>";
+
+  private static final String FMT_S_OPEN_LIST                   = "%s[#list %s as %s]\n";
+  private static final String FMT_A_OPEN_LIST                   = "%s<#list %s as %s>\n";
+
+  private static final String FMT_S_CLOSE_WITH                  = "\n%s[#assign %s=%s /]";
+  private static final String FMT_A_CLOSE_WITH                  = "\n%s<#assign %s=%s />";
+
+  private static final String FMT_S_OPEN_WITH_2                 = "%s[#assign %s=%s /]\n";
+  private static final String FMT_A_OPEN_WITH_2                 = "%s<#assign %s=%s />\n";
+
+  private static final String FMT_S_OPEN_WITH_1                 = "%s[#assign %s=%s! /]\n";
+  private static final String FMT_A_OPEN_WITH_1                 = "%s<#assign %s=%s! />\n";
+
+  private static final String FMT_S_CLOSE_WRAP_2                = "%s[/#if]";
+  private static final String FMT_A_CLOSE_WRAP_2                = "%s</#if>";
+
+  private static final String FMT_S_CLOSE_WRAP_1                = "\n%s[#else]";
+  private static final String FMT_A_CLOSE_WRAP_1                = "\n%s<#else>";
+
+  private static final String FMT_S_OPEN_WRAP                   = "%s[#if %s]\n";
+  private static final String FMT_A_OPEN_WRAP                   = "%s<#if %s>\n";
+
+  private static final String FMT_S_EMIT_LIST_CLOSE             = "[/#list]";
+  private static final String FMT_A_EMIT_LIST_CLOSE             = "</#list>";
+
+  private static final String FMT_S_EMIT_LIST_OPEN              = "[#list %s as %s]";
+  private static final String FMT_A_EMIT_LIST_OPEN              = "<#list %s as %s>";
+
+  private static final String FMT_S_EMIT_IMPORT_OPEN            = "[#import '%s' as %s /]";
+  private static final String FMT_A_EMIT_IMPORT_OPEN            = "<#import '%s' as %s />";
+
+  private static final String FMT_S_EMIT_INCLUDE_OPEN           = "[#include '%s' /]";
+  private static final String FMT_A_EMIT_INCLUDE_OPEN           = "<#include '%s' />";
+
+  private static final String FMT_S_EMIT_DEPENDS_CLOSE          = "[/#if]";
+  private static final String FMT_A_EMIT_DEPENDS_CLOSE          = "</#if>";
+
+  private static final String FMT_S_EMIT_DEPENDS_OPEN           = "[#if %s]";
+  private static final String FMT_A_EMIT_DEPENDS_OPEN           = "<#if %s>";
+
+  private static final String FMT_S_EMIT_DIRECTIVE_CLOSE        = "[/@%s]";
+  private static final String FMT_A_EMIT_DIRECTIVE_CLOSE        = "</@%s>";
+
+  private static final String FMT_S_EMIT_DIRECTIVE_OPEN         = "[@%s";
+  private static final String FMT_A_EMIT_DIRECTIVE_OPEN         = "<@%s";
+
+  private static final String FMT_S_EMIT_WITH_CLOSE             = "[#assign %s=%s /]\n";
+  private static final String FMT_A_EMIT_WITH_CLOSE             = "<#assign %s=%s />\n";
+
+  private static final String FMT_S_EMIT_WITH_OPEN_2            = "[#assign %s=%s /]";
+  private static final String FMT_A_EMIT_WITH_OPEN_2            = "<#assign %s=%s />";
+
+  private static final String FMT_S_EMIT_WITH_OPEN_1            = "[#assign %s=%s! /]\n";
+  private static final String FMT_A_EMIT_WITH_OPEN_1            = "<#assign %s=%s! />\n";
+
+  private static final String FMT_S_EMIT_ESCAPE_CLOSE           = "[/#escape]";
+  private static final String FMT_A_EMIT_ESCAPE_CLOSE           = "</#escape>";
+
+  private static final String FMT_S_EMIT_ESCAPE_OPEN            = "[#escape %s as %s]";
+  private static final String FMT_A_EMIT_ESCAPE_OPEN            = "<#escape %s as %s>";
+
+  private static final String FMT_S_EMIT_COMPRESS_CLOSE         = "[/#compress]";
+  private static final String FMT_A_EMIT_COMPRESS_CLOSE         = "</#compress>";
+
+  private static final String FMT_S_EMIT_COMPRESS_OPEN          = "[#compress]";
+  private static final String FMT_A_EMIT_COMPRESS_OPEN          = "<#compress>";
+
+  private static final String FMT_S_EMIT_DEFAULT_OPEN           = "[#default]";
+  private static final String FMT_A_EMIT_DEFAULT_OPEN           = "<#default>";
+
+  private static final String FMT_S_EMIT_NESTED_OPEN            = "[#nested]";
+  private static final String FMT_A_EMIT_NESTED_OPEN            = "<#nested>";
+
+  private static final String FMT_S_EMIT_MACRO_CLOSE            = "[/#macro]";
+  private static final String FMT_A_EMIT_MACRO_CLOSE            = "</#macro>";
+
+  private static final String FMT_S_EMIT_MACRO_OPEN_2           = "]";
+  private static final String FMT_A_EMIT_MACRO_OPEN_2           = ">";
+
+  private static final String FMT_S_EMIT_MACRO_OPEN_1           = "[#macro %s";
+  private static final String FMT_A_EMIT_MACRO_OPEN_1           = "<#macro %s";
+
+  private static final String FMT_S_EMIT_OPTION_CLOSE           = "[#break]";
+  private static final String FMT_A_EMIT_OPTION_CLOSE           = "<#break>";
+
+  private static final String FMT_S_EMIT_OPTION_OPEN            = "[#case %s]";
+  private static final String FMT_A_EMIT_OPTION_OPEN            = "<#case %s>";
+
+  private static final String FMT_S_EMIT_SELECT_CLOSE           = "[/#switch]";
+  private static final String FMT_A_EMIT_SELECT_CLOSE           = "</#switch>";
+
+  private static final String FMT_S_EMIT_SELECT_OPEN            = "[#switch %s]";
+  private static final String FMT_A_EMIT_SELECT_OPEN            = "<#switch %s>";
+
+  private static final String FMT_S_XML_ATTRIBUTE               = "[#if (%s)?has_content] %s=\"${%s}\"[/#if]";
+  private static final String FMT_A_XML_ATTRIBUTE               = "<#if (%s)?has_content> %s=\"${%s}\"</#if>";
+
   private static final AtomicLong COUNTER = new AtomicLong();
 
   String                                            content;
@@ -100,8 +202,45 @@ public final class TranslationContext extends DefaultHandler {
   // xml escaping
   int                                               xescape;
   Stack<Boolean>                                    xescapes;
+  
+  // formatting strings used to generate the code
+  String                                            fmtCloseDepends;
+  String                                            fmtCloseList;
+  String                                            fmtOpenList;
+  String                                            fmtCloseWith;
+  String                                            fmtOpenWith2;
+  String                                            fmtOpenWith1;
+  String                                            fmtCloseWrap2;
+  String                                            fmtCloseWrap1;
+  String                                            fmtOpenWrap;
+  String                                            fmtEmitListClose;
+  String                                            fmtEmitListOpen;
+  String                                            fmtEmitImportOpen;
+  String                                            fmtEmitIncludeOpen;
+  String                                            fmtEmitDependsClose;
+  String                                            fmtEmitDependsOpen;
+  String                                            fmtEmitDirectiveClose;
+  String                                            fmtEmitDirectiveOpen;
+  String                                            fmtEmitWithClose;
+  String                                            fmtEmitWithOpen2;
+  String                                            fmtEmitWithOpen1;
+  String                                            fmtEmitEscapeClose;
+  String                                            fmtEmitEscapeOpen;
+  String                                            fmtEmitCompressClose;
+  String                                            fmtEmitCompressOpen;
+  String                                            fmtEmitDefaultOpen;
+  String                                            fmtEmitNestedOpen;
+  String                                            fmtEmitMacroClose;
+  String                                            fmtEmitMacroOpen2;
+  String                                            fmtEmitMacroOpen1;
+  String                                            fmtEmitOptionClose;
+  String                                            fmtEmitOptionOpen;
+  String                                            fmtEmitSelectClose;
+  String                                            fmtEmitSelectOpen;
+  String                                            fmtXmlAttribute;
 
-  public TranslationContext(@NotNull String fmxPrefix, Function<String, String> directives, Map<String, BiFunction<String, String, String>> mappers) {
+  
+  public TranslationContext(@NotNull String fmxPrefix, Function<String, String> directives, Map<String, BiFunction<String, String, String>> mappers, boolean square) {
     directiveProvider = directives;
     attributeMappers  = mappers != null ? mappers : Collections.emptyMap();
     isCtxAttribute    = $_ -> CTX_NAMESPACE.equals($_.getNsUri());
@@ -109,9 +248,89 @@ public final class TranslationContext extends DefaultHandler {
     isFmxRelevant     = ($1, $2) -> FMX_NAMESPACE.equals($1) || (($2 != null) && $2.startsWith(fmxPrefix));
     hasFmxAttribute   = $ -> $.parallelStream()
       .map($_ -> isFmxRelevant.test($_.getNsUri(), $_.getQName()))
-      .reduce(false, ($1, $2) -> $1 || $2);
+      .reduce(false, ($1, $2) -> $1 || $2)
+      ;
+    if (square) {
+      initFmtSquareBrackets();
+    } else {
+      initFmtAngularBrackets();
+    }
   }
 
+  private void initFmtAngularBrackets() {
+    fmtCloseDepends         = FMT_A_CLOSE_DEPENDS;
+    fmtCloseList            = FMT_A_CLOSE_LIST;
+    fmtOpenList             = FMT_A_OPEN_LIST;
+    fmtCloseWith            = FMT_A_CLOSE_WITH;
+    fmtOpenWith2            = FMT_A_OPEN_WITH_2;
+    fmtOpenWith1            = FMT_A_OPEN_WITH_1;
+    fmtCloseWrap2           = FMT_A_CLOSE_WRAP_2;
+    fmtCloseWrap1           = FMT_A_CLOSE_WRAP_1;
+    fmtOpenWrap             = FMT_A_OPEN_WRAP;
+    fmtEmitListClose        = FMT_A_EMIT_LIST_CLOSE;
+    fmtEmitListOpen         = FMT_A_EMIT_LIST_OPEN;
+    fmtEmitImportOpen       = FMT_A_EMIT_IMPORT_OPEN;
+    fmtEmitIncludeOpen      = FMT_A_EMIT_INCLUDE_OPEN;
+    fmtEmitDependsClose     = FMT_A_EMIT_DEPENDS_CLOSE;
+    fmtEmitDependsOpen      = FMT_A_EMIT_DEPENDS_OPEN;
+    fmtEmitDirectiveClose   = FMT_A_EMIT_DIRECTIVE_CLOSE;
+    fmtEmitDirectiveOpen    = FMT_A_EMIT_DIRECTIVE_OPEN;
+    fmtEmitWithClose        = FMT_A_EMIT_WITH_CLOSE;
+    fmtEmitWithOpen2        = FMT_A_EMIT_WITH_OPEN_2;
+    fmtEmitWithOpen1        = FMT_A_EMIT_WITH_OPEN_1;
+    fmtEmitEscapeClose      = FMT_A_EMIT_ESCAPE_CLOSE;
+    fmtEmitEscapeOpen       = FMT_A_EMIT_ESCAPE_OPEN;
+    fmtEmitCompressClose    = FMT_A_EMIT_COMPRESS_CLOSE;
+    fmtEmitCompressOpen     = FMT_A_EMIT_COMPRESS_OPEN;
+    fmtEmitDefaultOpen      = FMT_A_EMIT_DEFAULT_OPEN;
+    fmtEmitNestedOpen       = FMT_A_EMIT_NESTED_OPEN;
+    fmtEmitMacroClose       = FMT_A_EMIT_MACRO_CLOSE;
+    fmtEmitMacroOpen2       = FMT_A_EMIT_MACRO_OPEN_2;
+    fmtEmitMacroOpen1       = FMT_A_EMIT_MACRO_OPEN_1;
+    fmtEmitOptionClose      = FMT_A_EMIT_OPTION_CLOSE;
+    fmtEmitOptionOpen       = FMT_A_EMIT_OPTION_OPEN;
+    fmtEmitSelectClose      = FMT_A_EMIT_SELECT_CLOSE;
+    fmtEmitSelectOpen       = FMT_A_EMIT_SELECT_OPEN;
+    fmtXmlAttribute         = FMT_A_XML_ATTRIBUTE;
+  }
+  
+  private void initFmtSquareBrackets() {
+    fmtCloseDepends         = FMT_S_CLOSE_DEPENDS;
+    fmtCloseList            = FMT_S_CLOSE_LIST;
+    fmtOpenList             = FMT_S_OPEN_LIST;
+    fmtCloseWith            = FMT_S_CLOSE_WITH;
+    fmtOpenWith2            = FMT_S_OPEN_WITH_2;
+    fmtOpenWith1            = FMT_S_OPEN_WITH_1;
+    fmtCloseWrap2           = FMT_S_CLOSE_WRAP_2;
+    fmtCloseWrap1           = FMT_S_CLOSE_WRAP_1;
+    fmtOpenWrap             = FMT_S_OPEN_WRAP;
+    fmtEmitListClose        = FMT_S_EMIT_LIST_CLOSE;
+    fmtEmitListOpen         = FMT_S_EMIT_LIST_OPEN;
+    fmtEmitImportOpen       = FMT_S_EMIT_IMPORT_OPEN;
+    fmtEmitIncludeOpen      = FMT_S_EMIT_INCLUDE_OPEN;
+    fmtEmitDependsClose     = FMT_S_EMIT_DEPENDS_CLOSE;
+    fmtEmitDependsOpen      = FMT_S_EMIT_DEPENDS_OPEN;
+    fmtEmitDirectiveClose   = FMT_S_EMIT_DIRECTIVE_CLOSE;
+    fmtEmitDirectiveOpen    = FMT_S_EMIT_DIRECTIVE_OPEN;
+    fmtEmitWithClose        = FMT_S_EMIT_WITH_CLOSE;
+    fmtEmitWithOpen2        = FMT_S_EMIT_WITH_OPEN_2;
+    fmtEmitWithOpen1        = FMT_S_EMIT_WITH_OPEN_1;
+    fmtEmitEscapeClose      = FMT_S_EMIT_ESCAPE_CLOSE;
+    fmtEmitEscapeOpen       = FMT_S_EMIT_ESCAPE_OPEN;
+    fmtEmitCompressClose    = FMT_S_EMIT_COMPRESS_CLOSE;
+    fmtEmitCompressOpen     = FMT_S_EMIT_COMPRESS_OPEN;
+    fmtEmitDefaultOpen      = FMT_S_EMIT_DEFAULT_OPEN;
+    fmtEmitNestedOpen       = FMT_S_EMIT_NESTED_OPEN;
+    fmtEmitMacroClose       = FMT_S_EMIT_MACRO_CLOSE;
+    fmtEmitMacroOpen2       = FMT_S_EMIT_MACRO_OPEN_2;
+    fmtEmitMacroOpen1       = FMT_S_EMIT_MACRO_OPEN_1;
+    fmtEmitOptionClose      = FMT_S_EMIT_OPTION_CLOSE;
+    fmtEmitOptionOpen       = FMT_S_EMIT_OPTION_OPEN;
+    fmtEmitSelectClose      = FMT_S_EMIT_SELECT_CLOSE;
+    fmtEmitSelectOpen       = FMT_S_EMIT_SELECT_OPEN;
+    fmtXmlAttribute         = FMT_S_XML_ATTRIBUTE;
+  }
+  
   @Override
   public void setDocumentLocator(Locator loc) {
     locator = loc;
@@ -162,7 +381,7 @@ public final class TranslationContext extends DefaultHandler {
       if (prefix != null) {
         // generate a test for the attribute value indicated by the namespace
         if (FMT_NAMESPACE.equals(nsUri)) {
-          builder.appendF("[#if (%s)?has_content] %s=\"${%s}\"[/#if]", nodeValue, localName, nodeValue);
+          builder.appendF(fmtXmlAttribute, nodeValue, localName, nodeValue);
         } else {
           builder.appendF(" %s:%s=\"%s\"", prefix, localName, nodeValue);
         }
@@ -375,44 +594,44 @@ public final class TranslationContext extends DefaultHandler {
 
   private void emitSelectOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     var value = FmxAttr.value.getValue(attrs);
-    builder.appendF("[#switch %s]", value);
+    builder.appendF(fmtEmitSelectOpen, value);
   }
 
   private void emitSelectClose(String uri, String localName, String qName) {
-    builder.append("[/#switch]");
+    builder.append(fmtEmitSelectClose);
   }
 
   // option (case)
 
   private void emitOptionOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     var expected = FmxAttr.value.getValue(attrs);
-    builder.appendF("[#case %s]", expected);
+    builder.appendF(fmtEmitOptionOpen, expected);
   }
 
   private void emitOptionClose(String uri, String localName, String qName) {
-    builder.append("[#break]");
+    builder.append(fmtEmitOptionClose);
   }
 
   // macro
   private void emitMacroOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     var name = FmxAttr.name.getRequiredValue(attrs, error_macro_without_name);
-    builder.appendF("[#macro %s", name);
+    builder.appendF(fmtEmitMacroOpen1, name);
     Predicate<XmlAttr> isFmxAttr    = $ -> isFmxRelevant.test($.getNsUri(), $.getQName());
     Predicate<XmlAttr> isNoFmxAttr  = isFmxAttr.negate();
     attrs.stream()
       .filter(isNoFmxAttr)
       .map(XmlAttr::getLocalName)
       .forEach($ -> builder.appendF(" %s", $));
-    builder.append("]");
+    builder.append(fmtEmitMacroOpen2);
   }
 
   private void emitMacroClose(String uri, String localName, String qName) {
-    builder.appendF("[/#macro]");
+    builder.appendF(fmtEmitMacroClose);
   }
 
   // macro
   private void emitNestedOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
-    builder.append("[#nested]");
+    builder.append(fmtEmitNestedOpen);
   }
 
   private void emitNestedClose(String uri, String localName, String qName) {
@@ -421,7 +640,7 @@ public final class TranslationContext extends DefaultHandler {
   // defaultcase (default)
 
   private void emitDefaultOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
-    builder.append("[#default]");
+    builder.append(fmtEmitDefaultOpen);
   }
 
   private void emitDefaultClose(String uri, String localName, String qName) {
@@ -430,11 +649,11 @@ public final class TranslationContext extends DefaultHandler {
   // compress
 
   private void emitCompressOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
-    builder.append("[#compress]");
+    builder.append(fmtEmitCompressOpen);
   }
 
   private void emitCompressClose(String uri, String localName, String qName) {
-    builder.append("[/#compress]");
+    builder.append(fmtEmitCompressClose);
   }
 
   // with
@@ -442,11 +661,11 @@ public final class TranslationContext extends DefaultHandler {
   private void emitEscapeOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     var name = FmxAttr.name.getRequiredValue(attrs, error_escape_without_name);
     var expr = FmxAttr.expr.getRequiredValue(attrs, error_escape_without_expr);
-    builder.appendF("[#escape %s as %s]", name, expr);
+    builder.appendF(fmtEmitEscapeOpen, name, expr);
   }
 
   private void emitEscapeClose(String uri, String localName, String qName) {
-    builder.append("[/#escape]");
+    builder.append(fmtEmitEscapeClose);
   }
 
   // with
@@ -456,26 +675,26 @@ public final class TranslationContext extends DefaultHandler {
     var modelExpr  = FmxAttr.value.getRequiredValue(attrs, error_with_values);
     // this variable name is used in case it already exists within the model, so we're backing it up before
     var var = newVar();
-    builder.appendF("[#assign %s=%s! /]\n", var, modelName);
-    builder.appendF("[#assign %s=%s /]", modelName, modelExpr);
+    builder.appendF(fmtEmitWithOpen1, var, modelName);
+    builder.appendF(fmtEmitWithOpen2, modelName, modelExpr);
     withRecords.push(new WithRecord(modelName, var));
   }
 
   private void emitWithClose(String uri, String localName, String qName) {
     var record = withRecords.pop();
-    builder.appendF("[#assign %s=%s /]\n", record.getModelname(), record.getVarname());
+    builder.appendF(fmtEmitWithClose, record.getModelname(), record.getVarname());
   }
 
   // directive
 
   private void emitDirectiveOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     var ftlName = directiveProvider.apply(localName);
-    builder.appendF("[@%s", ftlName);
+    builder.appendF(fmtEmitDirectiveOpen, ftlName);
     // write down all attributes that shall be kept
     attrs.stream().filter(isNotCtxAttribute).forEach($ -> fmAttribute(ftlName, $));
     // generate a context map attribute if desired
     emitContextAttributes(attrs.stream().filter(isCtxAttribute).collect(Collectors.toList()));
-    builder.append("]");
+    builder.append(fmtEmitMacroOpen2);
   }
 
   private void emitContextAttributes(List<XmlAttr> ctxAttrs) {
@@ -502,7 +721,7 @@ public final class TranslationContext extends DefaultHandler {
 
   private void emitDirectiveClose(String uri, String localName, String qName) {
     var name = directiveProvider.apply(localName);
-    builder.appendF("[/@%s]", name);
+    builder.appendF(fmtEmitDirectiveClose, name);
   }
 
   private void ctxAttribute(XmlAttr attr) {
@@ -541,11 +760,11 @@ public final class TranslationContext extends DefaultHandler {
 
   private void emitDependsOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     var dependsExpr = FmxAttr.value.getRequiredValue(attrs, error_depends_values);
-    builder.appendF("[#if %s]", dependsExpr);
+    builder.appendF(fmtEmitDependsOpen, dependsExpr);
   }
 
   private void emitDependsClose(String uri, String localName, String qName) {
-    builder.appendF("[/#if]");
+    builder.appendF(fmtEmitDependsClose);
   }
 
   // doctype
@@ -558,7 +777,7 @@ public final class TranslationContext extends DefaultHandler {
 
   private void emitIncludeOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     var path = FmxAttr.path.getRequiredValue(attrs, error_include_values);
-    builder.appendF("[#include '%s' /]", path);
+    builder.appendF(fmtEmitIncludeOpen, path);
   }
 
   // import
@@ -566,7 +785,7 @@ public final class TranslationContext extends DefaultHandler {
   private void emitImportOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     var path = FmxAttr.path.getRequiredValue(attrs, error_import_values);
     var name = FmxAttr.name.getRequiredValue(attrs, error_import_values);
-    builder.appendF("[#import '%s' as %s /]", path, name);
+    builder.appendF(fmtEmitImportOpen, path, name);
   }
 
   // list
@@ -574,16 +793,16 @@ public final class TranslationContext extends DefaultHandler {
   private void emitListOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
     var listExpression = FmxAttr.value.getRequiredValue(attrs, error_list_values);
     var iteratorName   = FmxAttr.it.getValue(attrs, "it");
-    builder.appendF("[#list %s as %s]", listExpression, iteratorName);
+    builder.appendF(fmtEmitListOpen, listExpression, iteratorName);
   }
 
   private void emitListClose(String uri, String localName, String qName) {
-    builder.appendF("[/#list]");
+    builder.appendF(fmtEmitListClose);
   }
 
   private void openWrap(String indent, String wrapExpression) {
     if (wrapExpression != null) {
-      builder.appendF("%s[#if %s]\n", indent, wrapExpression);
+      builder.appendF(fmtOpenWrap, indent, wrapExpression);
     }
     fmxXmlOnElement.push(wrapExpression != null);
   }
@@ -591,13 +810,10 @@ public final class TranslationContext extends DefaultHandler {
   private void closeWrap(String indent, int open, int close) {
     var hasWrapExpression = fmxXmlOnElement.pop();
     if (hasWrapExpression) {
-      var before = builder.substring(open, close);
-      System.err.println("BEFORE: '" + before + "'");
-      System.err.println("AFTER : '" + StringFunctions.trim(builder.substring(open, close), " \t", false) + "'");
       var innerContent = StringFunctions.trim(builder.substring(open, close), " \t", false);
-      builder.appendF("\n%s[#else]", indent);
+      builder.appendF(fmtCloseWrap1, indent);
       builder.append(innerContent);
-      builder.appendF("%s[/#if]", indent);
+      builder.appendF(fmtCloseWrap2, indent);
     }
   }
 
@@ -624,8 +840,8 @@ public final class TranslationContext extends DefaultHandler {
     WithRecord result = null;
     if (withExpression != null) {
       var varname = newVar();
-      builder.appendF("%s[#assign %s=%s! /]\n", indent, varname, modelName);
-      builder.appendF("%s[#assign %s=%s /]\n", indent, modelName, withExpression);
+      builder.appendF(fmtOpenWith1, indent, varname, modelName);
+      builder.appendF(fmtOpenWith2, indent, modelName, withExpression);
       result = new WithRecord(modelName, varname);
     }
     withRecords.push(result);
@@ -634,13 +850,13 @@ public final class TranslationContext extends DefaultHandler {
   private void closeWith(String indent) {
     var result = withRecords.pop();
     if (result != null) {
-      builder.appendF("\n%s[#assign %s=%s /]", indent, result.getModelname(), result.getVarname());
+      builder.appendF(fmtCloseWith, indent, result.getModelname(), result.getVarname());
     }
   }
 
   private void openList(String indent, String listExpression, String iteratorName) {
     if (listExpression != null) {
-      builder.appendF("%s[#list %s as %s]\n", indent, listExpression, iteratorName);
+      builder.appendF(fmtOpenList, indent, listExpression, iteratorName);
     }
     fmxXmlOnElement.push(listExpression != null);
   }
@@ -648,13 +864,13 @@ public final class TranslationContext extends DefaultHandler {
   private void closeList(String indent) {
     var hasListExpression = fmxXmlOnElement.pop();
     if (hasListExpression) {
-      builder.appendF("\n%s[/#list]", indent);
+      builder.appendF(fmtCloseList, indent);
     }
   }
 
   private void openDepends(String indent, String dependsExpression) {
     if (dependsExpression != null) {
-      builder.appendF("%s[#if %s]\n", indent, dependsExpression);
+      builder.appendF(fmtOpenWrap, indent, dependsExpression);
       dependsNL.push(new Integer[] {locator.getLineNumber(), builder.length() - 1});
     }
     fmxXmlOnElement.push(dependsExpression != null);
@@ -667,9 +883,9 @@ public final class TranslationContext extends DefaultHandler {
       if (nl[0].intValue() == locator.getLineNumber()) {
         // this fmx:depends element is located on a single line, so alter the output accordingly
         builder.deleteCharAt(nl[1].intValue());
-        builder.appendF("%s[/#if]", indent);
+        builder.appendF(fmtCloseWrap2, indent);
       } else {
-        builder.appendF("\n%s[/#if]", indent);
+        builder.appendF(fmtCloseDepends, indent);
       }
     }
   }

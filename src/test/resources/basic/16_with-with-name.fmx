@@ -1,5 +1,5 @@
-<fmx:with fmx:value="items" fmx:name="gollum">
+<fmx:with fmx:value="items" fmx:name="bilbo">
   <my-element b="second" a="first">
-    <inner c="${gollum}"/>
+    <inner c="${bilbo}"/>
   </my-element>
 </fmx:with>
