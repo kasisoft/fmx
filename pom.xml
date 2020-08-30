@@ -354,7 +354,7 @@
     </repository>
     -->
     <snapshotRepository>
-      <id>GitHubPackages</id>
+      <id>github</id>
       <url>https://maven.pkg.github.com/kasisoft/fmx</url>
     </snapshotRepository>
   </distributionManagement>
