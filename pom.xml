@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.kasisoft</groupId>
   <artifactId>com.kasisoft.libs.fmx</artifactId>
-  <version>0.6</version>
+  <version>0.7-SNAPSHOT</version>
 
   <name>FMX :: Kasisoft Freemarker Extension</name>
   <url>https://kasisoft.github.io/fmx/</url>
