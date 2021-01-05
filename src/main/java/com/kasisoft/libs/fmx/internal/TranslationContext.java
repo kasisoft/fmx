@@ -33,9 +33,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -203,6 +206,8 @@ public final class TranslationContext extends DefaultHandler {
   int                                               xescape;
   Stack<Boolean>                                    xescapes;
   
+  Set<String>                                       dontShorten;
+  
   // formatting strings used to generate the code
   String                                            fmtCloseDepends;
   String                                            fmtCloseList;
@@ -241,6 +246,7 @@ public final class TranslationContext extends DefaultHandler {
 
   
   public TranslationContext(@NotNull String fmxPrefix, Function<String, String> directives, Map<String, BiFunction<String, String, String>> mappers, boolean square) {
+    dontShorten       = new HashSet<String>(Arrays.asList("script", "span", "i", "strong"));
     directiveProvider = directives;
     attributeMappers  = mappers != null ? mappers : Collections.emptyMap();
     isCtxAttribute    = $_ -> CTX_NAMESPACE.equals($_.getNsUri());
@@ -564,7 +570,9 @@ public final class TranslationContext extends DefaultHandler {
   }
 
   private void endXmlElement(String uri, String localName, String qName) {
-    if (builder.length() == lastOpen) {
+    /** @note [13-SEP-2020:KASI]   Don't shorten for a 'script' tag as following tag will be embedded for some weird reason */
+    boolean doNotShort = (qName != null) && dontShorten.contains(qName.toLowerCase());
+    if ((builder.length() == lastOpen) && (!doNotShort)) {
       // get rid of '>' and replace it with a directly closing '/>'
       builder.setLength(builder.length() - xgt().length());
       builder.appendF("/%s", xgt());

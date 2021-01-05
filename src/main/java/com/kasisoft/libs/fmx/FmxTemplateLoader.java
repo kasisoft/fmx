@@ -44,16 +44,24 @@ public class FmxTemplateLoader implements TemplateLoader {
   Predicate<String>   isFmx;
   
   public FmxTemplateLoader(@NotNull TemplateLoader loader) {
-    this(loader, null);
+    this(loader, null, null, null, true);
+  }
+
+  public FmxTemplateLoader(@NotNull TemplateLoader loader, boolean square) {
+    this(loader, null, null, null, false);
   }
 
   public FmxTemplateLoader(@NotNull TemplateLoader loader, Predicate<String> test) {
-    this(loader, test, null, null);
+    this(loader, test, null, null, true);
   }
-  
-  public FmxTemplateLoader(@NotNull TemplateLoader loader, Predicate<String> test, SimpleFunction<String> directives, Map<String, BiFunction<String, String, String>> mappers) {
+
+  public FmxTemplateLoader(@NotNull TemplateLoader loader, Predicate<String> test, boolean square) {
+    this(loader, test, null, null, square);
+  }
+
+  public FmxTemplateLoader(@NotNull TemplateLoader loader, Predicate<String> test, SimpleFunction<String> directives, Map<String, BiFunction<String, String, String>> mappers, boolean square) {
     delegate    = loader;
-    translator  = new FmxTranslator(null, null, null, directives, mappers);
+    translator  = new FmxTranslator(null, null, null, directives, mappers, square);
     isFmx       = test != null ? test : IS_FMX;
   }
   
