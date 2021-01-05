@@ -1,4 +1,4 @@
-![FMX](https://github.com/kasisoft/fmx/workflows/FMX/badge.svg?branch=master&event=push)
+![FMX](https://github.com/kasisoft/fmx/workflows/FMX/badge.svg)
 
 # Purpose
 
@@ -15,9 +15,9 @@ the templating.
 
 # Development Setup
 
-The build uses Gradke
+The build uses Maven
 
-* [https://gradle.org/](https://gradle.org/)
+* [https://maven.apache.org/](https://maven.apache.org/)
 
 
 ## Requirements
@@ -80,7 +80,7 @@ You can create a token with your github account:
 
 MIT License
 
-Copyright (c) 2020 Daniel Kasmeroglu (Kasisoft)
+Copyright (c) 2021 Daniel Kasmeroglu (Kasisoft)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
