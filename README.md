@@ -32,7 +32,7 @@ The build uses Maven
      <dependency>
          <groupId>com.kasisoft</groupId>
          <artifactId>com.kasisoft.libs.fmx</artifactId>
-         <version>0.6</version>
+         <version>0.7</version>
      </dependency>
 
 
@@ -43,7 +43,7 @@ Snapshots can be used while accessing a dedicated maven repository. Your POM nee
      <dependency>
          <groupId>com.kasisoft</groupId>
          <artifactId>com.kasisoft.libs.fmx</artifactId>
-         <version>0.7-SNAPSHOT</version>
+         <version>0.8-SNAPSHOT</version>
      </dependency>
      
      <repositories>
