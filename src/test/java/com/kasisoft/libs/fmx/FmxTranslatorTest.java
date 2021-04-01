@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.net.*;
+
 import lombok.experimental.FieldDefaults;
 
 import lombok.AccessLevel;
@@ -184,7 +186,7 @@ public class FmxTranslatorTest {
   
   private String loadText(ClassLoader cl, String resource) {
     try {
-      var source = FmxTranslatorTest.class.getClassLoader().getResource(resource);
+      URL source = FmxTranslatorTest.class.getClassLoader().getResource(resource);
       assertNotNull(String.format("Canot find '%s'", resource), source);
       return FmxUtils.readText(source);
     } catch (Exception ex) {
@@ -194,15 +196,15 @@ public class FmxTranslatorTest {
   }
 
   private Object[] createRecord(ClassLoader cl, String testcase, boolean square) {
-    var fmx = loadText(cl, String.format("basic/%s.fmx", testcase));
-    var ftl = loadText(cl, String.format("basic/%s%s.ftl", testcase, square ? "-s" : "-a")); 
+    String fmx = loadText(cl, String.format("basic/%s.fmx", testcase));
+    String ftl = loadText(cl, String.format("basic/%s%s.ftl", testcase, square ? "-s" : "-a")); 
     return new Object[] {testcase, fmx, ftl, square};
   }
 
   @DataProvider(name = "convertData")
   public Object[][] convertData() {
-    var cl   = getClass().getClassLoader();
-    var list = new ArrayList<Object[]>(); 
+    ClassLoader    cl   = getClass().getClassLoader();
+    List<Object[]> list = new ArrayList<>(); 
     TESTCASES.stream().map($ -> createRecord(cl, $, false)).forEach(list::add);
     TESTCASES.stream().map($ -> createRecord(cl, $, true)).forEach(list::add);
     return list.toArray(new Object[list.size()][2]);

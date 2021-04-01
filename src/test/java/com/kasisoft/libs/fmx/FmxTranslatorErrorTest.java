@@ -44,13 +44,13 @@ public class FmxTranslatorErrorTest {
   
   @DataProvider(name = "convertData")
   public Object[][] convertData() {
-    var cl   = Thread.currentThread().getContextClassLoader();
-    var list = TESTCASES.stream().map($ -> createRecord(cl, $)).collect(Collectors.toList());
+    ClassLoader  cl   = Thread.currentThread().getContextClassLoader();
+    List<Object> list = TESTCASES.stream().map($ -> createRecord(cl, $)).collect(Collectors.toList());
     return list.toArray(new Object[list.size()][2]);
   }
   
   private Object[] createRecord(ClassLoader cl, String testcase) {
-    var fmx = loadText(cl, String.format("invalid/%s.fmx", testcase));
+    String fmx = loadText(cl, String.format("invalid/%s.fmx", testcase));
     return new Object[] {fmx};
   }
   

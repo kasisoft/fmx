@@ -43,7 +43,7 @@ public class FmxUtils {
   private static void copy(Reader reader, Writer writer) {
     try {
       char[] charray = new char[8192];
-      var    read    = reader.read(charray);
+      int    read    = reader.read(charray);
       while (read != -1) {
         if (read > 0) {
           writer.write(charray, 0, read);
@@ -63,8 +63,8 @@ public class FmxUtils {
   public static String trimTrailing(String input, String chars) {
     StringBuilder result = new StringBuilder(input);
     while (result.length() > 0) {
-      var length = result.length();
-      var ch     = result.charAt(length - 1);
+      int  length = result.length();
+      char ch     = result.charAt(length - 1);
       if (chars.indexOf(ch) == -1) {
         break;
       }

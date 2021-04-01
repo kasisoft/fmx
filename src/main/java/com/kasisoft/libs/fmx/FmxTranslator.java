@@ -1,32 +1,25 @@
 package com.kasisoft.libs.fmx;
 
-import static com.kasisoft.libs.fmx.FmxConstants.CTX_NAMESPACE;
-import static com.kasisoft.libs.fmx.FmxConstants.CTX_PREFIX;
-import static com.kasisoft.libs.fmx.FmxConstants.FMT_NAMESPACE;
-import static com.kasisoft.libs.fmx.FmxConstants.FMT_PREFIX;
-import static com.kasisoft.libs.fmx.FmxConstants.FMX_NAMESPACE;
-import static com.kasisoft.libs.fmx.FmxConstants.FMX_PREFIX;
+import static com.kasisoft.libs.fmx.FmxConstants.*;
 
-import com.kasisoft.libs.fmx.internal.TranslationContext;
+import com.kasisoft.libs.fmx.internal.*;
 
-import org.xml.sax.InputSource;
+import org.xml.sax.*;
 
-import javax.validation.constraints.NotNull;
-import javax.xml.parsers.SAXParserFactory;
+import javax.validation.constraints.*;
+import javax.xml.parsers.*;
 
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
+import java.util.function.*;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
-import java.io.StringReader;
+import java.io.*;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.log4j.*;
 
-import lombok.experimental.FieldDefaults;
+import lombok.experimental.*;
 
-import lombok.AccessLevel;
+import lombok.*;
 
 /**
  * @author daniel.kasmeroglu@kasisoft.com
@@ -99,7 +92,7 @@ public class FmxTranslator {
    */
    public String convert(@NotNull String xmlInput) {
     try {
-      var ctx = new TranslationContext(nsPrefix, directiveProvider, attributeMappers, squareBrackets);
+      TranslationContext ctx = new TranslationContext(nsPrefix, directiveProvider, attributeMappers, squareBrackets);
       convert(xmlInput, ctx);
       String result = ctx.toString();
       debug.accept(xmlInput, result);
@@ -110,9 +103,9 @@ public class FmxTranslator {
   }
 
   private void convert(String xmlInput, TranslationContext ctx) throws Exception {
-    var wrapped = String.format(wrapper, xmlInput);
-    try (var reader = new StringReader(wrapped)) {
-      var saxParser = saxParserFactory.newSAXParser();
+    String wrapped = String.format(wrapper, xmlInput);
+    try (StringReader reader = new StringReader(wrapped)) {
+      SAXParser saxParser = saxParserFactory.newSAXParser();
       saxParser.parse(new InputSource(reader), ctx);
     }
   }
@@ -122,8 +115,8 @@ public class FmxTranslator {
   }
 
   private void debugOn(String xml, String ftl) {
-    var message = String.format("{xml:\n%s\n} -=>\n{ftl:\n%s\n}", xml, ftl);
-    log.debug( message );
+    String message = String.format("{xml:\n%s\n} -=>\n{ftl:\n%s\n}", xml, ftl);
+    log.debug(message);
   }
   
   private void debugOff(String xml, String ftl) {

@@ -67,7 +67,7 @@ public enum FmxElementType {
   }
   
   public static FmxElementType valueByName(@NotBlank String name, FmxElementType defaultValue) {
-    var result = LocalData.map.get(name);
+    FmxElementType result = LocalData.map.get(name);
     if (result == null) {
       result = defaultValue;
     }

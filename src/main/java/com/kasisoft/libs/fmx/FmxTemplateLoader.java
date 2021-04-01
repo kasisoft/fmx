@@ -71,7 +71,7 @@ public class FmxTemplateLoader implements TemplateLoader {
   public Object findTemplateSource(@NotBlank String name) throws IOException {
     FmxRecord result = null;
     if (isFmx.test(name)) {
-      var resource = delegate.findTemplateSource(name);
+      Object resource = delegate.findTemplateSource(name);
       if (resource != null) {
         result = new FmxRecord(resource, null);
       }
@@ -81,7 +81,7 @@ public class FmxTemplateLoader implements TemplateLoader {
 
   @Override
   public long getLastModified(Object templateSource) {
-    var result = 0L;
+    long result = 0L;
     if (templateSource instanceof FmxRecord) {
       result = delegate.getLastModified(((FmxRecord) templateSource).resource);
     }
@@ -92,7 +92,7 @@ public class FmxTemplateLoader implements TemplateLoader {
   public Reader getReader(Object templateSource, String encoding) throws IOException {
     Reader result = null;
     if (templateSource instanceof FmxRecord) {
-      var fmxRecord = (FmxRecord) templateSource;
+      FmxRecord fmxRecord = (FmxRecord) templateSource;
       if (fmxRecord.getTranslation() == null) {
         // first call: translate fmx to ftl
         fmxRecord.setTranslation(loadTranslation(fmxRecord.getResource(), encoding));
@@ -105,14 +105,14 @@ public class FmxTemplateLoader implements TemplateLoader {
   @Override
   public void closeTemplateSource(Object templateSource) throws IOException {
     if (templateSource instanceof FmxRecord) {
-      var fmxRecord = (FmxRecord) templateSource;
+      FmxRecord fmxRecord = (FmxRecord) templateSource;
       delegate.closeTemplateSource(fmxRecord.resource);
       fmxRecord.setTranslation(null);
     }
   }
   
   private String loadTranslation(Object resource, String encoding) throws IOException {
-    try (var reader = delegate.getReader(resource, encoding)) {
+    try (Reader reader = delegate.getReader(resource, encoding)) {
       return loadTranslation(reader);
     }
   }

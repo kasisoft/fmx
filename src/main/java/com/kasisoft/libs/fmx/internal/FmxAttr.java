@@ -44,7 +44,7 @@ public enum FmxAttr {
 
   private XmlAttr getAttr(@NotNull List<XmlAttr> attrs) {
     XmlAttr result = null;
-    for (var attr : attrs) {
+    for (XmlAttr attr : attrs) {
       if (FMX_NAMESPACE.equals(attr.getNsUri()) && attr.getLocalName().equals(literal)) {
         result = attr;
         break;
@@ -54,8 +54,8 @@ public enum FmxAttr {
   }
   
   public String getValue(@NotNull List<XmlAttr> attrs) {
-    String result = null;
-    var    attr   = getAttr(attrs);
+    String  result = null;
+    XmlAttr attr   = getAttr(attrs);
     if (attr != null) {
       result = FmxUtils.cleanup(attr.getAttrValue());
     }
@@ -63,7 +63,7 @@ public enum FmxAttr {
   }
   
   public String getValue(@NotNull List<XmlAttr> attrs, String defValue) {
-    var result = getValue(attrs);
+    String result = getValue(attrs);
     if (result == null) {
       result = defValue;
     }
@@ -71,7 +71,7 @@ public enum FmxAttr {
   }
   
   public String getRequiredValue(@NotNull List<XmlAttr> attrs, String errorMessage) {
-    var result = getValue(attrs);
+    String result = getValue(attrs);
     if (result == null) {
       throw new FmxException(errorMessage);
     }
