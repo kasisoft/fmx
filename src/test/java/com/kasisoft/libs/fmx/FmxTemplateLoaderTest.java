@@ -6,7 +6,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-import com.kasisoft.libs.common.io.IoFunctions;
+import com.kasisoft.libs.fmx.internal.*;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -69,7 +69,7 @@ public class FmxTemplateLoaderTest {
 
     String text = null;
     try (Reader reader = fmxTemplateLoader.getReader(template1, StandardCharsets.UTF_8.name())) {
-      text = IoFunctions.readText(reader);
+      text = FmxUtils.readText(reader);
     }
     assertThat(text, is("[#import '/bibo/sample.ftl' as dodo /]\n"));
 

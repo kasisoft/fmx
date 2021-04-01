@@ -7,7 +7,6 @@ import static com.kasisoft.libs.fmx.FmxConstants.FMT_PREFIX;
 import static com.kasisoft.libs.fmx.FmxConstants.FMX_NAMESPACE;
 import static com.kasisoft.libs.fmx.FmxConstants.FMX_PREFIX;
 
-import com.kasisoft.libs.common.functional.SimpleFunction;
 import com.kasisoft.libs.fmx.internal.TranslationContext;
 
 import org.xml.sax.InputSource;

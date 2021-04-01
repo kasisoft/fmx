@@ -2,7 +2,6 @@ package com.kasisoft.libs.fmx.internal;
 
 import static com.kasisoft.libs.fmx.FmxConstants.FMX_NAMESPACE;
 
-import com.kasisoft.libs.common.text.StringFunctions;
 import com.kasisoft.libs.fmx.FmxException;
 
 import org.w3c.dom.Attr;
@@ -58,7 +57,7 @@ public enum FmxAttr {
     String result = null;
     var    attr   = getAttr(attrs);
     if (attr != null) {
-      result = StringFunctions.cleanup(attr.getAttrValue());
+      result = FmxUtils.cleanup(attr.getAttrValue());
     }
     return result;
   }

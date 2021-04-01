@@ -2,9 +2,7 @@ package com.kasisoft.libs.fmx;
 
 import static com.kasisoft.libs.fmx.FmxConstants.IS_FMX;
 
-import com.kasisoft.libs.common.io.IoFunctions;
-
-import com.kasisoft.libs.common.functional.SimpleFunction;
+import com.kasisoft.libs.fmx.internal.*;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -121,7 +119,7 @@ public class FmxTemplateLoader implements TemplateLoader {
 
   private String loadTranslation(Reader reader) throws IOException {
     try {
-      String fullInput = IoFunctions.readText(reader);
+      String fullInput = FmxUtils.readText(reader);
       String result    = translator.convert(fullInput);
       if (log.isTraceEnabled()) {
         log.trace("<<---- before ---->>");

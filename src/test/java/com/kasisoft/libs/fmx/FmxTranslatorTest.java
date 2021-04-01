@@ -5,7 +5,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
-import com.kasisoft.libs.common.io.IoFunctions;
+import com.kasisoft.libs.fmx.internal.*;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
@@ -186,7 +186,7 @@ public class FmxTranslatorTest {
     try {
       var source = FmxTranslatorTest.class.getClassLoader().getResource(resource);
       assertNotNull(String.format("Canot find '%s'", resource), source);
-      return IoFunctions.readText(source);
+      return FmxUtils.readText(source);
     } catch (Exception ex) {
       fail(ex.getLocalizedMessage());
       return null;

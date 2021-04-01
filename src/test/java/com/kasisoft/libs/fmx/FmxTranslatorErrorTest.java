@@ -2,7 +2,7 @@ package com.kasisoft.libs.fmx;
 
 import static org.testng.Assert.fail;
 
-import com.kasisoft.libs.common.io.IoFunctions;
+import com.kasisoft.libs.fmx.internal.*;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -55,7 +55,7 @@ public class FmxTranslatorErrorTest {
   }
   
   private String loadText(ClassLoader cl, String resource) {
-    return IoFunctions.readText(cl.getResource( resource) );
+    return FmxUtils.readText(cl.getResource( resource) );
   }
 
   @Test(dataProvider = "convertData", expectedExceptions = FmxException.class)
