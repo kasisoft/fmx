@@ -1,21 +1,18 @@
 package com.kasisoft.libs.fmx.internal;
 
-import static com.kasisoft.libs.fmx.FmxConstants.FMX_NAMESPACE;
+import static com.kasisoft.libs.fmx.FmxConstants.*;
 
-import com.kasisoft.libs.fmx.FmxException;
+import com.kasisoft.libs.fmx.*;
 
-import org.w3c.dom.Attr;
+import org.w3c.dom.*;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import lombok.experimental.FieldDefaults;
+import lombok.experimental.*;
 
-import lombok.AccessLevel;
-import lombok.Getter;
+import lombok.*;
 
 /**
  * @author daniel.kasmeroglu@kasisoft.com

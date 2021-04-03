@@ -1,30 +1,23 @@
 package com.kasisoft.libs.fmx;
 
-import static com.kasisoft.libs.fmx.FmxConstants.IS_FMX;
+import static com.kasisoft.libs.fmx.FmxConstants.*;
 
 import com.kasisoft.libs.fmx.internal.*;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
+import java.util.function.*;
 
-import java.util.Map;
+import java.util.*;
+import java.io.*;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
+import lombok.extern.log4j.*;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.experimental.*;
 
-import lombok.experimental.FieldDefaults;
+import lombok.*;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
-import freemarker.cache.TemplateLoader;
+import freemarker.cache.*;
 
 /**
  * This loader uses another {@link TemplateLoader} instance to load <code>.fmx</code> templates. It  

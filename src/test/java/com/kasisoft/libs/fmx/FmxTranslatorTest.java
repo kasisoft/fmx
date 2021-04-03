@@ -1,29 +1,22 @@
 package com.kasisoft.libs.fmx;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.testng.Assert.fail;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.testng.Assert.*;
 
 import com.kasisoft.libs.fmx.internal.*;
 
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
-import java.util.function.BiFunction;
+import java.util.function.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import java.net.*;
 
-import lombok.experimental.FieldDefaults;
+import lombok.experimental.*;
 
-import lombok.AccessLevel;
+import lombok.*;
 
 /**
  * @author daniel.kasmeroglu@kasisoft.com
@@ -187,7 +180,7 @@ public class FmxTranslatorTest {
   private String loadText(ClassLoader cl, String resource) {
     try {
       URL source = FmxTranslatorTest.class.getClassLoader().getResource(resource);
-      assertNotNull(String.format("Canot find '%s'", resource), source);
+      assertNotNull(source, String.format("Canot find '%s'", resource));
       return FmxUtils.readText(source);
     } catch (Exception ex) {
       fail(ex.getLocalizedMessage());

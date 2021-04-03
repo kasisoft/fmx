@@ -1,14 +1,12 @@
 package com.kasisoft.libs.fmx.internal;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-import lombok.experimental.FieldDefaults;
+import lombok.experimental.*;
 
-import lombok.AccessLevel;
-import lombok.Getter;
+import lombok.*;
 
 /**
  * @author daniel.kasmeroglu@kasisoft.com

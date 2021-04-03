@@ -1,25 +1,22 @@
 package com.kasisoft.libs.fmx;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.testng.Assert.*;
 
 import com.kasisoft.libs.fmx.internal.*;
 
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.*;
 
-import java.io.Reader;
+import java.io.*;
 
-import lombok.experimental.FieldDefaults;
+import lombok.experimental.*;
 
-import lombok.AccessLevel;
+import lombok.*;
 
-import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.*;
 
 /**
  * @author daniel.kasmeroglu@kasisoft.com

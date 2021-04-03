@@ -1,7 +1,6 @@
 package com.kasisoft.libs.fmx;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 
 /**
  * @author daniel.kasmeroglu@kasisoft.com
