@@ -76,6 +76,7 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
+    <maven.javadoc.source>${java.version}</maven.javadoc.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     
   </properties>
@@ -130,31 +131,11 @@
         <scope>test</scope>
       </dependency>
       
-      <!--
-      Only needed for the modularization and indirectly required by lombok 
-      -->
-      <dependency>
-        <groupId>org.mapstruct</groupId>
-        <artifactId>mapstruct-processor</artifactId>
-        <version>${mapstruct-processor.version}</version>
-      </dependency>
-      
-      <dependency>
-        <groupId>org.mapstruct</groupId>
-        <artifactId>mapstruct-jdk8</artifactId>
-        <version>${mapstruct-processor.version}</version>
-      </dependency>
-        
     </dependencies>
   </dependencyManagement>
   
   <dependencies>
 
-    <dependency>
-      <groupId>org.mapstruct</groupId>
-      <artifactId>mapstruct-jdk8</artifactId>
-    </dependency>
-  
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -188,11 +169,6 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-all</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.mapstruct</groupId>
-      <artifactId>mapstruct-processor</artifactId>
     </dependency>
     
   </dependencies>
@@ -306,7 +282,6 @@
             </execution>
           </executions>
           <configuration>
-            <failOnError>false</failOnError>
             <additionalparam>-Xdoclint:none</additionalparam>
           </configuration>
         </plugin>
