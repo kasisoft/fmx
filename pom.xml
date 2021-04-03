@@ -56,7 +56,6 @@
     <jakarta.validation-api.version>2.0.2</jakarta.validation-api.version>
     <log4j.version>2.13.3</log4j.version>
     <lombok.version>1.18.16</lombok.version>
-    <mapstruct-processor.version>1.4.1.Final</mapstruct-processor.version>
     <testng.version>7.3.0</testng.version>
     
     <!-- versioning: plugins -->
