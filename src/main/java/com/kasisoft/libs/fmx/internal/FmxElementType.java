@@ -55,7 +55,9 @@ public enum FmxElementType {
   
   nested("nested"),
   
-  xescape("xescape");
+  xescape("xescape"),
+  
+  assign("assign");
   
   String   literal;
   

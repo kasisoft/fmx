@@ -152,6 +152,12 @@ public class FmxTranslatorTest {
     // escaping of xml
     "42_xescape-by-attr",
 
+    // assign
+    "43_assign",
+
+    // assign
+    "44_assign-with-literal",
+
   });
   
   FmxTranslator    translatorSquare;

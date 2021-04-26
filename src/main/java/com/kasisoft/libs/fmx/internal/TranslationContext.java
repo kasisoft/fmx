@@ -61,6 +61,9 @@ public final class TranslationContext extends DefaultHandler {
   private static final String FMT_S_EMIT_IMPORT_OPEN            = "[#import '%s' as %s /]";
   private static final String FMT_A_EMIT_IMPORT_OPEN            = "<#import '%s' as %s />";
 
+  private static final String FMT_S_EMIT_ASSIGN                 = "[#assign %s = %s /]";
+  private static final String FMT_A_EMIT_ASSIGN                 = "<#assign %s = %s />";
+
   private static final String FMT_S_EMIT_INCLUDE_OPEN           = "[#include '%s' /]";
   private static final String FMT_A_EMIT_INCLUDE_OPEN           = "<#include '%s' />";
 
@@ -188,6 +191,7 @@ public final class TranslationContext extends DefaultHandler {
   String                                            fmtCloseWrap2;
   String                                            fmtCloseWrap1;
   String                                            fmtOpenWrap;
+  String                                            fmtEmitAssign;
   String                                            fmtEmitListClose;
   String                                            fmtEmitListOpen;
   String                                            fmtEmitImportOpen;
@@ -243,6 +247,7 @@ public final class TranslationContext extends DefaultHandler {
     fmtCloseWrap2           = FMT_A_CLOSE_WRAP_2;
     fmtCloseWrap1           = FMT_A_CLOSE_WRAP_1;
     fmtOpenWrap             = FMT_A_OPEN_WRAP;
+    fmtEmitAssign           = FMT_A_EMIT_ASSIGN;
     fmtEmitListClose        = FMT_A_EMIT_LIST_CLOSE;
     fmtEmitListOpen         = FMT_A_EMIT_LIST_OPEN;
     fmtEmitImportOpen       = FMT_A_EMIT_IMPORT_OPEN;
@@ -280,6 +285,7 @@ public final class TranslationContext extends DefaultHandler {
     fmtCloseWrap2           = FMT_S_CLOSE_WRAP_2;
     fmtCloseWrap1           = FMT_S_CLOSE_WRAP_1;
     fmtOpenWrap             = FMT_S_OPEN_WRAP;
+    fmtEmitAssign           = FMT_S_EMIT_ASSIGN;
     fmtEmitListClose        = FMT_S_EMIT_LIST_CLOSE;
     fmtEmitListOpen         = FMT_S_EMIT_LIST_OPEN;
     fmtEmitImportOpen       = FMT_S_EMIT_IMPORT_OPEN;
@@ -428,6 +434,7 @@ public final class TranslationContext extends DefaultHandler {
     /** @todo [25-AUG-2020:KASI]   Use a map with functions for that */
     FmxElementType type = FmxElementType.valueByName(localName, FmxElementType.directive);
     switch (type) {
+    case assign       : emitAssign       (uri, localName, qName, attrs); break;
     case directive    : emitDirectiveOpen(uri, localName, qName, attrs); break;
     case doctype      : emitDoctypeOpen  (uri, localName, qName, attrs); break;
     case include      : emitIncludeOpen  (uri, localName, qName, attrs); break;
@@ -663,6 +670,13 @@ public final class TranslationContext extends DefaultHandler {
     builder.append(String.format(fmtEmitWithClose, record.getModelname(), record.getVarname()));
   }
 
+  // assign
+  private void emitAssign(String uri, String localName, String qName, List<XmlAttr> attrs) {
+    String name  = FmxAttr.name.getValue(attrs);
+    String value = FmxAttr.value.getValue(attrs);
+    builder.append(String.format(fmtEmitAssign, name, value));
+  }
+  
   // directive
 
   private void emitDirectiveOpen(String uri, String localName, String qName, List<XmlAttr> attrs) {
